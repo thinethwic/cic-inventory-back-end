@@ -2,6 +2,7 @@ package com.cic.inventory.controllers;
 
 import com.cic.inventory.constants.ErrorCodes;
 import com.cic.inventory.dtos.ErrorResponse;
+import com.cic.inventory.exceptions.InventoryException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -65,5 +66,20 @@ public class AbstractController {
                 .build();
 
         return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    @ExceptionHandler(InventoryException.class)
+    public ResponseEntity<ErrorResponse> handleSkillMentorException(
+            InventoryException ex) {
+
+        log.error("Unhandled Exception: ", ex);
+
+        ErrorResponse errorResponse = ErrorResponse.builder()
+                .message(ex.getMessage())
+                .errorCode(ex.getStatus().toString())
+                .timestamp(LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME))
+                .build();
+
+        return new ResponseEntity<>(errorResponse, ex.getStatus());
     }
 }
