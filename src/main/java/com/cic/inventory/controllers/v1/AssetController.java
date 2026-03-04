@@ -4,6 +4,7 @@ import com.cic.inventory.controllers.AbstractController;
 import com.cic.inventory.dtos.AssetDTO;
 import com.cic.inventory.entities.Asset;
 import com.cic.inventory.services.AssetService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
@@ -37,6 +38,20 @@ public class AssetController extends AbstractController {
     public ResponseEntity<Asset> createAsset(@Validated @RequestBody AssetDTO assetDTO) {
         Asset asset = assetService.createNewAsset(assetDTO);
         return sendCreatedResponse(asset);
+    }
+
+    @PutMapping("{id}")
+    public ResponseEntity<Asset> updateAsset(@PathVariable Long id, @Valid @RequestBody AssetDTO updatedAssetDTO) {
+        Asset asset = modelMapper.map(updatedAssetDTO, Asset.class);
+        Asset updatedAsset = assetService.updateAssetById(id, asset);
+        return sendOkResponse(updatedAsset);
+
+    }
+
+    @DeleteMapping("{id}")
+    public ResponseEntity<Asset> deleteAsset(@PathVariable Long id) {
+        assetService.deleteAsset(id);
+        return sendNoContentResponse();
     }
 
 
