@@ -79,8 +79,8 @@ public class LocationServiceImpl implements LocationService {
         try {
             locationRepositories.deleteById(id);
         } catch (Exception exception) {
-            log.error("Failed to delete department with id {}", id, exception);
-            throw new InventoryException("Failed to delete department", HttpStatus.INTERNAL_SERVER_ERROR);
+            log.error("Failed to delete location with id {}", id, exception);
+            throw new InventoryException("Failed to delete location", HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 }
