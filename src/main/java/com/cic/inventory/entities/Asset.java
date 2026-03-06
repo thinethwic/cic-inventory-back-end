@@ -44,11 +44,13 @@ public class Asset {
     @Column(name = "status")
     private AssetStatus status;
 
-    @Column(name = "location")
-    private String location;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "location_id")
+    private Location location;
 
-    @Column(name = "assigned_to")
-    private String assignedTo;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "emp_id")
+    private Employee assignedTo;
 
     @Column(name = "purchase_date")
     private LocalDate purchaseDate;

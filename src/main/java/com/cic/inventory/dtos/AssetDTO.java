@@ -2,6 +2,8 @@ package com.cic.inventory.dtos;
 
 import com.cic.inventory.entities.AssetCategory;
 import com.cic.inventory.entities.AssetStatus;
+import com.cic.inventory.entities.Employee;
+import com.cic.inventory.entities.Location;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -36,15 +38,14 @@ public class AssetDTO {
     @NotNull(message = "Asset Status is required")
     private AssetStatus status;
 
-    @NotBlank(message = "Location is required")
-    private String location;
+    @NotNull(message = "Location is required")
+    private Long locationId;
 
-    @NotBlank(message = "Assign Person is required")
-    private String assignedTo;
+    @NotNull(message = "Assign Person is required")
+    private Long assignedToId;
 
-    @NotBlank(message = "Purchasing date is required")
+    @NotNull(message = "Purchasing date is required")
     private LocalDate purchaseDate;
 
-    @NotBlank(message = "Warranty date is required")
-    private LocalDate warrantyEnd;
-}
+    @NotNull(message = "Warranty date is required")
+    private LocalDate warrantyEnd;}
