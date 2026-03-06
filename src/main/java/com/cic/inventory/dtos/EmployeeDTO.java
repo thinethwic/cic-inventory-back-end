@@ -11,6 +11,9 @@ import lombok.Data;
 @Data
 public class EmployeeDTO {
 
+    @NotNull(message = "Employee ID cannot be null")
+    private String empId;
+
     @NotNull(message = "Department ID cannot be null")
     private Department department;
 

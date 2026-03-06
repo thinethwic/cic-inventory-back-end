@@ -19,12 +19,16 @@ public class Employee {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @OneToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "department_id",nullable = false)
+    @Column(name = "empId", nullable = false, unique = true)
+    private String empId;
+
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "department_id", nullable = false)
     private Department department;
 
-    @OneToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "location_id",nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "location_id", nullable = false)
     private Location location;
 
     @Column(name = "name", nullable = false)

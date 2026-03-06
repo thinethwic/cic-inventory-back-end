@@ -1,8 +1,12 @@
 package com.cic.inventory.services.impl;
 
+import com.cic.inventory.entities.Department;
 import com.cic.inventory.entities.Employee;
+import com.cic.inventory.entities.Location;
 import com.cic.inventory.exceptions.InventoryException;
+import com.cic.inventory.repositories.DepartmentRepositories;
 import com.cic.inventory.repositories.EmployeeRepositories;
+import com.cic.inventory.repositories.LocationRepositories;
 import com.cic.inventory.services.EmployeeService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,11 +22,34 @@ import org.springframework.stereotype.Service;
 public class EmployeeServiceImpl implements EmployeeService {
     private final ModelMapper modelMapper;
     private final EmployeeRepositories employeeRepositories;
+    private final DepartmentRepositories departmentRepositories;
+    private final LocationRepositories locationRepositories;
     @Override
     public Employee createNewEmployee(Employee employee) {
         try {
+            if (employee.getDepartment() == null || employee.getDepartment().getId() == null) {
+                throw new InventoryException("Department is required", HttpStatus.BAD_REQUEST);
+            }
+
+            if (employee.getLocation() == null || employee.getLocation().getId() == null) {
+                throw new InventoryException("Location is required", HttpStatus.BAD_REQUEST);
+            }
+
+            Department department = departmentRepositories.findById(employee.getDepartment().getId())
+                    .orElseThrow(() -> new InventoryException("Department not found", HttpStatus.NOT_FOUND));
+
+            Location location = locationRepositories.findById(employee.getLocation().getId())
+                    .orElseThrow(() -> new InventoryException("Location not found", HttpStatus.NOT_FOUND));
+
+            employee.setDepartment(department);
+            employee.setLocation(location);
+
             return employeeRepositories.save(employee);
-        }catch (Exception exception) {
+
+        } catch (InventoryException inventoryException) {
+            log.error("Failed to create new employee: {}", inventoryException.getMessage());
+            throw inventoryException;
+        } catch (Exception exception) {
             log.error("Failed to create new employee", exception);
             throw new InventoryException("Failed to create new employee", HttpStatus.INTERNAL_SERVER_ERROR);
         }
