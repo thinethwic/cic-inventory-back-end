@@ -1,4 +1,4 @@
-package com.cic.inventory.entities;
+package com.cic.inventory.entities.types;
 
 public enum AssetCategory {
     LAPTOP,

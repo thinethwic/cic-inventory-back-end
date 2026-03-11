@@ -1,5 +1,6 @@
 package com.cic.inventory.entities;
 
+import com.cic.inventory.entities.types.EmployeeStatus;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;

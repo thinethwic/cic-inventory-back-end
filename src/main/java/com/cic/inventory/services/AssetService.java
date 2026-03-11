@@ -13,6 +13,7 @@ public interface AssetService {
     Asset createNewAsset(AssetDTO assetDTO);
     Page<Asset> getAllAsset(Pageable pageable);
     Asset getAssetById(Long id);
-    Asset updateAssetById(Long id, Asset updatedAsset);
+    Asset updateAssetById(Long id,AssetDTO assetUpdateDTO);
     void deleteAsset(Long id);
+    Asset findByScan(String code);
 }

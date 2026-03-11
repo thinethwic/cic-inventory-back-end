@@ -1,5 +1,7 @@
 package com.cic.inventory.entities;
 
+import com.cic.inventory.entities.types.AssetCategory;
+import com.cic.inventory.entities.types.AssetStatus;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -49,7 +51,7 @@ public class Asset {
     private Location location;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "emp_id")
+    @JoinColumn(name = "emp_id", nullable = true)
     private Employee assignedTo;
 
     @Column(name = "purchase_date")
@@ -57,6 +59,9 @@ public class Asset {
 
     @Column(name = "warranty_end")
     private LocalDate warrantyEnd;
+
+    @Column(name = "qrCode")
+    private String qrCode;
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)

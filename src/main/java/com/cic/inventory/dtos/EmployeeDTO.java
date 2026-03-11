@@ -1,7 +1,7 @@
 package com.cic.inventory.dtos;
 
 import com.cic.inventory.entities.Department;
-import com.cic.inventory.entities.EmployeeStatus;
+import com.cic.inventory.entities.types.EmployeeStatus;
 import com.cic.inventory.entities.Location;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotNull;

@@ -32,23 +32,26 @@ public class AssetServiceImpl implements AssetService {
     @Override
     public Asset createNewAsset(AssetDTO assetDTO) {
         try {
-            Employee employee = employeeRepositories.findById(assetDTO.getAssignedToId())
-                    .orElseThrow(() -> new InventoryException("Employee not found", HttpStatus.NOT_FOUND));
-
             Location location = locationRepositories.findById(assetDTO.getLocationId())
                     .orElseThrow(() -> new InventoryException("Location not found", HttpStatus.NOT_FOUND));
 
+            Employee employee = null;
+            if (assetDTO.getAssignedToId() != null) {
+                employee = employeeRepositories.findById(assetDTO.getAssignedToId())
+                        .orElseThrow(() -> new InventoryException("Employee not found", HttpStatus.NOT_FOUND));
+            }
+
             Asset asset = modelMapper.map(assetDTO, Asset.class);
-            asset.setAssignedTo(employee);   // ✅ set entities directly on the Asset
             asset.setLocation(location);
+            asset.setAssignedTo(employee);
 
             return assetRepositories.save(asset);
 
         } catch (DataIntegrityViolationException e) {
             log.error("Data integrity violation while creating asset: {}", e.getMessage());
-            throw new InventoryException("Asset with this serial and asset code already exists", HttpStatus.CONFLICT);
+            throw new InventoryException("Asset with this serial number or asset code already exists", HttpStatus.CONFLICT);
         } catch (InventoryException e) {
-            throw e;  // ✅ don't swallow your own exceptions
+            throw e;
         } catch (Exception e) {
             log.error("Failed to create new asset", e);
             throw new InventoryException("Failed to create new asset", HttpStatus.INTERNAL_SERVER_ERROR);
@@ -80,35 +83,37 @@ public class AssetServiceImpl implements AssetService {
     }
 
     @Override
-    public Asset updateAssetById(Long id, Asset updatedAsset) {
+    public Asset updateAssetById(Long id, AssetDTO assetUpdateDTO) {
         try {
             Asset existing = assetRepositories.findById(id)
                     .orElseThrow(() -> new InventoryException("Asset not found", HttpStatus.NOT_FOUND));
 
-            Employee employee = employeeRepositories.findById(id)
-                    .orElseThrow(() -> new InventoryException("Employee not found", HttpStatus.NOT_FOUND));
+            Employee employee = null;
+            if (assetUpdateDTO.getAssignedToId() != null) {
+                employee = employeeRepositories.findById(assetUpdateDTO.getAssignedToId())
+                        .orElseThrow(() -> new InventoryException("Employee not found", HttpStatus.NOT_FOUND));
+            }
 
-            Location location = locationRepositories.findById(id)
+            Location location = locationRepositories.findById(assetUpdateDTO.getLocationId())
                     .orElseThrow(() -> new InventoryException("Location not found", HttpStatus.NOT_FOUND));
 
-            // Map scalar fields (assetCode, brand, model, etc.) onto existing entity
-            modelMapper.map(updatedAsset, existing);
+            modelMapper.map(assetUpdateDTO, existing);
 
-            // Override with resolved entities — modelMapper can't do this
-            existing.setAssignedTo(employee);
             existing.setLocation(location);
+            existing.setAssignedTo(employee);
 
             return assetRepositories.save(existing);
-        }catch (InventoryException inventoryException){
-            log.warn("Asset not found with id: {} to fetch", id, inventoryException);
-            throw new InventoryException("Asset Not found", HttpStatus.NOT_FOUND);
 
-        } catch (Exception exception) {
-            log.error("Error updating asset", exception);
+        } catch (InventoryException e) {
+            throw e;
+        } catch (DataIntegrityViolationException e) {
+            log.error("Data integrity violation while updating asset: {}", e.getMessage());
+            throw new InventoryException("Asset code or serial number already exists", HttpStatus.CONFLICT);
+        } catch (Exception e) {
+            log.error("Error updating asset", e);
             throw new InventoryException("Failed to update asset", HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
-
     @Override
     public void deleteAsset(Long id) {
         try {
@@ -117,6 +122,16 @@ public class AssetServiceImpl implements AssetService {
             log.error("Failed to delete asset with id {}", id, exception);
             throw new InventoryException("Failed to delete asset", HttpStatus.INTERNAL_SERVER_ERROR);
         }
+    }
+    public Asset findByScan(String code) {
+        String trimmed = code.trim();
+
+        // Search by barcode first, then serial number, then asset code
+        return assetRepositories.findByBarcode(trimmed)
+                .or(() -> assetRepositories.findBySerialNo(trimmed))
+                .or(() -> assetRepositories.findByAssetCode(trimmed))
+                .orElseThrow(() -> new InventoryException(
+                        "Asset not found for scan code: " , HttpStatus.NOT_FOUND));
     }
 
 }

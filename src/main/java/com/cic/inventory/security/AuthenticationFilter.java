@@ -45,6 +45,7 @@ public class AuthenticationFilter extends OncePerRequestFilter {
 
             // Extract roles from the token
             List<String> roles = tokenValidator.extractRoles(token);
+
             List<GrantedAuthority> authorities = roles != null ?
                     roles.stream()
                             .map(role -> new SimpleGrantedAuthority("ROLE_" + role))
@@ -54,6 +55,7 @@ public class AuthenticationFilter extends OncePerRequestFilter {
             UsernamePasswordAuthenticationToken authentication =
                     new UsernamePasswordAuthenticationToken(userPrincipal, null, authorities);
             SecurityContextHolder.getContext().setAuthentication(authentication);
+
         }
 
         filterChain.doFilter(request, response);

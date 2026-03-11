@@ -1,9 +1,7 @@
 package com.cic.inventory.dtos;
 
-import com.cic.inventory.entities.AssetCategory;
-import com.cic.inventory.entities.AssetStatus;
-import com.cic.inventory.entities.Employee;
-import com.cic.inventory.entities.Location;
+import com.cic.inventory.entities.types.AssetCategory;
+import com.cic.inventory.entities.types.AssetStatus;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -15,11 +13,11 @@ import java.time.LocalDate;
 public class AssetDTO {
 
     @NotBlank(message = "Asset Code is required")
-    @Size(min = 2, max = 50, message = "Asset Code must be between 2 and 50 characters")
+    @Size(min = 2, max = 50)
     private String assetCode;
 
     @NotBlank(message = "Barcode is required")
-    @Size(min = 1, max = 50, message = "Barcode must be between 1 and 50 characters")
+    @Size(min = 1, max = 50)
     private String barcode;
 
     @NotNull(message = "Asset Category is required")
@@ -32,20 +30,23 @@ public class AssetDTO {
     private String model;
 
     @NotBlank(message = "Serial No is required")
-    @Size(min = 1, max = 100, message = "Serial No must be between 1 and 100 characters")
+    @Size(min = 1, max = 100)
     private String serialNo;
 
     @NotNull(message = "Asset Status is required")
     private AssetStatus status;
 
+    // Foreign keys
     @NotNull(message = "Location is required")
     private Long locationId;
 
-    @NotNull(message = "Assign Person is required")
-    private Long assignedToId;
+    private Long assignedToId; // optional employee
 
-    @NotNull(message = "Purchasing date is required")
+    @NotNull(message = "Purchase date is required")
     private LocalDate purchaseDate;
 
-    @NotNull(message = "Warranty date is required")
-    private LocalDate warrantyEnd;}
+    @NotNull(message = "Warranty end date is required")
+    private LocalDate warrantyEnd;
+
+    private String qrCode; // better as string if using QR values
+}

@@ -1,9 +1,15 @@
 package com.cic.inventory.entities;
 
+import com.cic.inventory.entities.types.MaintenancePriority;
+import com.cic.inventory.entities.types.MaintenanceStatus;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.Date;
 
 @Entity
 @Table(name = "maintenance")
@@ -18,16 +24,17 @@ public class Maintenance {
     private Long id;
 
     @Column(name = "ticket_no", nullable = false, unique = true, length = 20)
-    private String ticketNo;               // e.g. MT-0001
+    private String ticketNo;
 
-    // FK to Asset — store just the ID as a string (matches your frontend assetId)
-    @Column(name = "asset_id", nullable = false)
-    private String assetId;
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "asset_id", nullable = false)
+    private Asset asset;
 
-    @Column(name = "asset_code", nullable = false, length = 50)
-    private String assetCode;              // snapshot for display
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "supplier_id", nullable = false)
+    private Supplier supplier;
 
-    @Column(name = "issue_title", nullable = false, length = 255)
+    @Column(name = "issue_title", length = 255)
     private String issueTitle;
 
     @Column(columnDefinition = "TEXT")
@@ -35,11 +42,11 @@ public class Maintenance {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
-    private MaintenancePriority priority;  // LOW | MEDIUM | HIGH | CRITICAL
+    private MaintenancePriority priority;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
-    private MaintenanceStatus status;      // OPEN | IN_PROGRESS | COMPLETED | CANCELLED
+    private MaintenanceStatus status;
 
     @Column(name = "reported_date", nullable = false)
     private LocalDate reportedDate;
@@ -47,18 +54,20 @@ public class Maintenance {
     @Column(name = "due_date")
     private LocalDate dueDate;
 
-    @Column(name = "completed_date")
-    private LocalDate completedDate;
-
     @Column(name = "assigned_to", length = 100)
-    private String assignedTo;             // technician name
-
-    @Column(length = 100)
-    private String supplier;               // vendor name
+    private String assignedTo;
 
     @Column(precision = 10, scale = 2)
-    private BigDecimal cost;               // LKR value
+    private BigDecimal cost;
 
     @Column(columnDefinition = "TEXT")
     private String notes;
+
+    @CreationTimestamp
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private Date createdAt;
+
+    @UpdateTimestamp
+    @Column(name = "updated_at")
+    private Date updatedAt;
 }

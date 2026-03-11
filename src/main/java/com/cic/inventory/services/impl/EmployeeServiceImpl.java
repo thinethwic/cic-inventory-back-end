@@ -16,6 +16,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
+
 @Service
 @Slf4j
 @RequiredArgsConstructor
@@ -24,6 +26,22 @@ public class EmployeeServiceImpl implements EmployeeService {
     private final EmployeeRepositories employeeRepositories;
     private final DepartmentRepositories departmentRepositories;
     private final LocationRepositories locationRepositories;
+
+    private String generateNextEmpId() {
+        Optional<Employee> lastEmployee = employeeRepositories.findTopByOrderByIdDesc();
+
+        if (lastEmployee.isEmpty() || lastEmployee.get().getEmpId() == null) {
+            return "EMP001";
+        }
+
+        String lastEmpId = lastEmployee.get().getEmpId(); // example EMP007
+        String numericPart = lastEmpId.replaceAll("\\D+", ""); // 007
+
+        int nextNumber = Integer.parseInt(numericPart) + 1;
+
+        return String.format("EMP%03d", nextNumber);
+    }
+
     @Override
     public Employee createNewEmployee(Employee employee) {
         try {
@@ -43,6 +61,7 @@ public class EmployeeServiceImpl implements EmployeeService {
 
             employee.setDepartment(department);
             employee.setLocation(location);
+            employee.setEmpId(generateNextEmpId());
 
             return employeeRepositories.save(employee);
 

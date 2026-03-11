@@ -53,6 +53,7 @@ public class SecurityConfig {
                                 "/webjars/**",
                                 "/swagger-resources/**"
                         ).permitAll()
+
                         // Public read access to mentors from home page
                         .anyRequest().authenticated()
                 )
