@@ -1,11 +1,16 @@
-version: '3.8'
 services:
   app:
-    build: .
+    image: cic-asset-inventory:lts1
+    container_name: skill-mentor-backend
     ports:
-      - "8081:8081"
+      - "8085:8081"
     environment:
-      DATABASE_URL: "jdbc:postgresql://db.aiiyrgotzcdwejgjlwvz.supabase.co:5432/postgres?sslmode=require"
-      DB_USERNAME: "postgres"
-      DB_PASSWORD: "123Thineth//"
-      CLERK_JWKS_URL: "https://faithful-halibut-62.clerk.accounts.dev/.well-known/jwks.json"
+      - DATABASE_URL=jdbc:postgresql://aws-1-ap-northeast-2.pooler.supabase.com:5432/postgres
+      - USERNAME=${DB_USERNAME:-postgres}
+      - PASSWORD=${DB_PASSWORD:-123Thineth//}
+      - SPRING_PROFILES_ACTIVE=prod
+    depends_on:
+      - db
+
+volumes:
+  postgres_data:
