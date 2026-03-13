@@ -1,9 +1,9 @@
 package com.cic.inventory.dtos;
 
-import com.cic.inventory.entities.types.AssetCategory;
 import com.cic.inventory.entities.types.AssetStatus;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 
@@ -20,8 +20,13 @@ public class AssetDTO {
     @Size(min = 1, max = 50)
     private String barcode;
 
-    @NotNull(message = "Asset Category is required")
-    private AssetCategory category;
+    @NotBlank(message = "Category is required")
+    @Size(max = 100, message = "Category must not exceed 100 characters")
+    @Pattern(
+            regexp = "^[A-Za-z0-9 &()_./+-]+$",
+            message = "Category contains invalid characters"
+    )
+    private String category;
 
     @NotBlank(message = "Brand is required")
     private String brand;

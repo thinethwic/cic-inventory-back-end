@@ -118,6 +118,9 @@ public class AssetServiceImpl implements AssetService {
     public void deleteAsset(Long id) {
         try {
             assetRepositories.deleteById(id);
+        } catch (DataIntegrityViolationException dataIntegrityViolationException){
+            throw new InventoryException( "Failed to delete asset! This asset is linked to other records.",
+                    HttpStatus.CONFLICT);
         } catch (Exception exception) {
             log.error("Failed to delete asset with id {}", id, exception);
             throw new InventoryException("Failed to delete asset", HttpStatus.INTERNAL_SERVER_ERROR);

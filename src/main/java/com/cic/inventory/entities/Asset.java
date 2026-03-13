@@ -1,6 +1,5 @@
 package com.cic.inventory.entities;
 
-import com.cic.inventory.entities.types.AssetCategory;
 import com.cic.inventory.entities.types.AssetStatus;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -26,12 +25,11 @@ public class Asset {
     @Column(name = "asset_code", nullable = false, unique = true)
     private String assetCode;
 
-    @Column(name = "barcode")
+    @Column(name = "barcode", unique = true)
     private String barcode;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "category")
-    private AssetCategory category;
+    @Column(name = "category", nullable = false, length = 100)
+    private String category;
 
     @Column(name = "brand")
     private String brand;
