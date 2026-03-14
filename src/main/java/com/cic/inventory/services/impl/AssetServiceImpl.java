@@ -1,14 +1,12 @@
 package com.cic.inventory.services.impl;
 
 import com.cic.inventory.dtos.AssetDTO;
-import com.cic.inventory.entities.Asset;
-import com.cic.inventory.entities.Department;
-import com.cic.inventory.entities.Employee;
-import com.cic.inventory.entities.Location;
+import com.cic.inventory.entities.*;
 import com.cic.inventory.exceptions.InventoryException;
 import com.cic.inventory.repositories.AssetRepositories;
 import com.cic.inventory.repositories.EmployeeRepositories;
 import com.cic.inventory.repositories.LocationRepositories;
+import com.cic.inventory.repositories.SupplierRepositories;
 import com.cic.inventory.services.AssetService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -28,12 +26,16 @@ public class AssetServiceImpl implements AssetService {
     private final ModelMapper modelMapper;
     private final EmployeeRepositories employeeRepositories;
     private final LocationRepositories locationRepositories;
+    private final SupplierRepositories supplierRepositories;
 
     @Override
     public Asset createNewAsset(AssetDTO assetDTO) {
         try {
             Location location = locationRepositories.findById(assetDTO.getLocationId())
                     .orElseThrow(() -> new InventoryException("Location not found", HttpStatus.NOT_FOUND));
+
+            Supplier supplier = supplierRepositories.findById(assetDTO.getSupplierId())
+                    .orElseThrow(() -> new InventoryException("Supplier not found", HttpStatus.NOT_FOUND));
 
             Employee employee = null;
             if (assetDTO.getAssignedToId() != null) {
@@ -44,6 +46,7 @@ public class AssetServiceImpl implements AssetService {
             Asset asset = modelMapper.map(assetDTO, Asset.class);
             asset.setLocation(location);
             asset.setAssignedTo(employee);
+            asset.setSupplier(supplier);
 
             return assetRepositories.save(asset);
 
@@ -97,10 +100,14 @@ public class AssetServiceImpl implements AssetService {
             Location location = locationRepositories.findById(assetUpdateDTO.getLocationId())
                     .orElseThrow(() -> new InventoryException("Location not found", HttpStatus.NOT_FOUND));
 
+            Supplier supplier = supplierRepositories.findById(assetUpdateDTO.getSupplierId())
+                    .orElseThrow(() -> new InventoryException("Supplier not found", HttpStatus.NOT_FOUND));
+
             modelMapper.map(assetUpdateDTO, existing);
 
             existing.setLocation(location);
             existing.setAssignedTo(employee);
+            existing.setSupplier(supplier);
 
             return assetRepositories.save(existing);
 

@@ -47,6 +47,9 @@ public class AssetDTO {
 
     private Long assignedToId; // optional employee
 
+    @NotNull(message = "Supplier is required")
+    private Long supplierId;
+
     @NotNull(message = "Purchase date is required")
     private LocalDate purchaseDate;
 

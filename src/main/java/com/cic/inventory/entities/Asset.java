@@ -52,6 +52,12 @@ public class Asset {
     @JoinColumn(name = "emp_id", nullable = true)
     private Employee assignedTo;
 
+    // ── Supplier relationship ─────────────────────────────────────────────────
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "supplier_id", nullable = false)
+    private Supplier supplier;
+
     @Column(name = "purchase_date")
     private LocalDate purchaseDate;
 
