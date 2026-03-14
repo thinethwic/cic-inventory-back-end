@@ -1,6 +1,7 @@
 package com.cic.inventory.services;
 
 import com.cic.inventory.dtos.AssetDTO;
+import com.cic.inventory.dtos.responses.AssetResponseDTO;
 import com.cic.inventory.entities.Asset;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -11,8 +12,8 @@ import java.util.List;
 @Service
 public interface AssetService {
     Asset createNewAsset(AssetDTO assetDTO);
-    Page<Asset> getAllAsset(Pageable pageable);
-    Asset getAssetById(Long id);
+    Page<AssetResponseDTO> getAllAsset(Pageable pageable);
+    AssetResponseDTO getAssetById(Long id);
     Asset updateAssetById(Long id,AssetDTO assetUpdateDTO);
     void deleteAsset(Long id);
     Asset findByScan(String code);

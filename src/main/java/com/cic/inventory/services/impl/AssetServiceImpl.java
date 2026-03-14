@@ -1,6 +1,7 @@
 package com.cic.inventory.services.impl;
 
 import com.cic.inventory.dtos.AssetDTO;
+import com.cic.inventory.dtos.responses.AssetResponseDTO;
 import com.cic.inventory.entities.*;
 import com.cic.inventory.exceptions.InventoryException;
 import com.cic.inventory.repositories.AssetRepositories;
@@ -62,26 +63,25 @@ public class AssetServiceImpl implements AssetService {
     }
 
     @Override
-    public Page<Asset> getAllAsset(Pageable pageable) {
+    public Page<AssetResponseDTO> getAllAsset(Pageable pageable) {
         try {
-            return assetRepositories.findAll(pageable);
-        } catch (Exception exception) {
-            log.error("Failed to get all assets", exception);
+            return assetRepositories.findAll(pageable).map(this::toResponse);
+        } catch (Exception e) {
+            log.error("Failed to get all assets", e);
             throw new InventoryException("Failed to get all assets", HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
     @Override
-    public Asset getAssetById(Long id) {
+    public AssetResponseDTO getAssetById(Long id) {
         try {
-            Asset asset =  assetRepositories.findById(id).orElseThrow(
-                    () -> new InventoryException("Asset Not Found", HttpStatus.NOT_FOUND)
-            );
+            Asset asset = assetRepositories.findById(id)
+                    .orElseThrow(() -> new InventoryException("Asset Not Found", HttpStatus.NOT_FOUND));
             log.info("Successfully fetched asset {}", id);
-            return asset;
-        }catch (InventoryException inventoryException){
-            log.warn("Asset not found with id: {} to fetch", id, inventoryException);
-            throw new InventoryException("Asset Not found", HttpStatus.NOT_FOUND);
+            return toResponse(asset);
+        } catch (InventoryException e) {
+            log.warn("Asset not found with id: {}", id, e);
+            throw e;
         }
     }
 
@@ -142,6 +142,44 @@ public class AssetServiceImpl implements AssetService {
                 .or(() -> assetRepositories.findByAssetCode(trimmed))
                 .orElseThrow(() -> new InventoryException(
                         "Asset not found for scan code: " , HttpStatus.NOT_FOUND));
+    }
+
+    // ── Mapping helper ────────────────────────────────────────────────────────
+
+    private AssetResponseDTO toResponse(Asset asset) {
+        AssetResponseDTO dto = new AssetResponseDTO();
+        dto.setId(asset.getId());
+        dto.setAssetCode(asset.getAssetCode());
+        dto.setBarcode(asset.getBarcode());
+        dto.setCategory(asset.getCategory());
+        dto.setBrand(asset.getBrand());
+        dto.setModel(asset.getModel());
+        dto.setSerialNo(asset.getSerialNo());
+        dto.setStatus(asset.getStatus());
+        dto.setPurchaseDate(asset.getPurchaseDate());
+        dto.setWarrantyEnd(asset.getWarrantyEnd());
+        dto.setQrCode(asset.getQrCode());
+        dto.setCreatedAt(asset.getCreatedAt());
+        dto.setUpdatedAt(asset.getUpdatedAt());
+
+        // Resolve location name
+        if (asset.getLocation() != null) {
+            dto.setLocation(asset.getLocation().getName());
+        }
+
+        // Resolve assigned employee as "empId - name"
+        if (asset.getAssignedTo() != null) {
+            Employee emp = asset.getAssignedTo();
+            dto.setAssignedTo(emp.getEmpId() + " - " + emp.getName());
+        }
+
+        // Resolve supplier flat fields
+        if (asset.getSupplier() != null) {
+            dto.setSupplierId(asset.getSupplier().getId());
+            dto.setSupplierName(asset.getSupplier().getName());
+        }
+
+        return dto;
     }
 
 }

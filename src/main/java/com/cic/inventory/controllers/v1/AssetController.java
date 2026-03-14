@@ -2,6 +2,7 @@ package com.cic.inventory.controllers.v1;
 
 import com.cic.inventory.controllers.AbstractController;
 import com.cic.inventory.dtos.AssetDTO;
+import com.cic.inventory.dtos.responses.AssetResponseDTO;
 import com.cic.inventory.entities.Asset;
 import com.cic.inventory.services.AssetService;
 import jakarta.validation.Valid;
@@ -24,14 +25,14 @@ public class AssetController extends AbstractController {
     private final ModelMapper modelMapper;
 
     @GetMapping
-    public ResponseEntity<Page<Asset>> getAllAssets(Pageable pageable) {
-        Page<Asset> mentors = assetService.getAllAsset(pageable);
+    public ResponseEntity<Page<AssetResponseDTO>> getAllAssets(Pageable pageable) {
+        Page<AssetResponseDTO> mentors = assetService.getAllAsset(pageable);
         return sendOkResponse(mentors);
     }
 
     @GetMapping("{id}")
-    public ResponseEntity<Asset> getAssetById(@PathVariable Long id) {
-        Asset asset = assetService.getAssetById(id);
+    public ResponseEntity<AssetResponseDTO> getAssetById(@PathVariable Long id) {
+        AssetResponseDTO asset = assetService.getAssetById(id);
         return sendOkResponse(asset);
     }
 
