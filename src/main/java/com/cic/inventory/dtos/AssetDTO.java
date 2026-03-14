@@ -16,8 +16,7 @@ public class AssetDTO {
     @Size(min = 2, max = 50)
     private String assetCode;
 
-    @NotBlank(message = "Barcode is required")
-    @Size(min = 1, max = 50)
+    @Size(max = 50)
     private String barcode;
 
     @NotBlank(message = "Category is required")
