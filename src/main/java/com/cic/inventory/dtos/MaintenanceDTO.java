@@ -22,9 +22,6 @@ public class MaintenanceDTO {
     @NotNull(message = "Asset is required")
     private Long assetId;
 
-    @NotNull(message = "Supplier is required")
-    private Long supplierId;
-
     private String issueTitle;
     private String description;
 

@@ -3,11 +3,9 @@ package com.cic.inventory.services.impl;
 import com.cic.inventory.dtos.MaintenanceDTO;
 import com.cic.inventory.entities.Asset;
 import com.cic.inventory.entities.Maintenance;
-import com.cic.inventory.entities.Supplier;
 import com.cic.inventory.exceptions.InventoryException;
 import com.cic.inventory.repositories.AssetRepositories;
 import com.cic.inventory.repositories.MaintenanceRepositories;
-import com.cic.inventory.repositories.SupplierRepositories;
 import com.cic.inventory.services.MaintenanceService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -26,7 +24,7 @@ public class MaintenanceServiceImpl implements MaintenanceService {
 
     private final MaintenanceRepositories maintenanceRepositories;
     private final AssetRepositories assetRepositories;
-    private final SupplierRepositories supplierRepositories;
+    // SupplierRepositories removed
 
     private String generateNextTicketNo() {
         Optional<Maintenance> lastMaintenance = maintenanceRepositories.findTopByOrderByIdDesc();
@@ -35,12 +33,12 @@ public class MaintenanceServiceImpl implements MaintenanceService {
             return "MT-0001";
         }
 
-        String lastTicketNo = lastMaintenance.get().getTicketNo(); // example EMP007
-        String numericPart = lastTicketNo.replaceAll("\\D+", ""); // 007
+        String lastTicketNo = lastMaintenance.get().getTicketNo();
+        String numericPart = lastTicketNo.replaceAll("\\D+", "");
 
         int nextNumber = Integer.parseInt(numericPart) + 1;
 
-        return String.format("EMP%03d", nextNumber);
+        return String.format("MT-%04d", nextNumber);
     }
 
     @Override
@@ -49,13 +47,8 @@ public class MaintenanceServiceImpl implements MaintenanceService {
             Asset asset = assetRepositories.findById(dto.getAssetId())
                     .orElseThrow(() -> new InventoryException("Asset not found", HttpStatus.NOT_FOUND));
 
-            Supplier supplier = supplierRepositories.findById(dto.getSupplierId())
-                    .orElseThrow(() -> new InventoryException("Supplier not found", HttpStatus.NOT_FOUND));
-
             Maintenance maintenance = Maintenance.builder()
-                    .ticketNo(dto.getTicketNo())
                     .asset(asset)
-                    .supplier(supplier)
                     .issueTitle(dto.getIssueTitle())
                     .description(dto.getDescription())
                     .priority(dto.getPriority())
@@ -66,14 +59,15 @@ public class MaintenanceServiceImpl implements MaintenanceService {
                     .cost(dto.getCost())
                     .notes(dto.getNotes())
                     .build();
+
             maintenance.setTicketNo(generateNextTicketNo());
 
             return maintenanceRepositories.save(maintenance);
 
-        }catch (DataIntegrityViolationException dataIntegrityViolationException){
-            throw new InventoryException("Duplicate Key Constrain from Forging Key",HttpStatus.CONFLICT);
-        } catch (InventoryException inventoryException) {
-            throw new InventoryException("Not found Exception", HttpStatus.NOT_FOUND);
+        } catch (DataIntegrityViolationException e) {
+            throw new InventoryException("Duplicate Key Constraint from Foreign Key", HttpStatus.CONFLICT);
+        } catch (InventoryException e) {
+            throw e;
         } catch (Exception e) {
             log.error("Failed to create maintenance", e);
             throw new InventoryException("Failed to create Maintenance", HttpStatus.INTERNAL_SERVER_ERROR);
@@ -108,12 +102,9 @@ public class MaintenanceServiceImpl implements MaintenanceService {
             Asset asset = assetRepositories.findById(dto.getAssetId())
                     .orElseThrow(() -> new InventoryException("Asset not found", HttpStatus.NOT_FOUND));
 
-            Supplier supplier = supplierRepositories.findById(dto.getSupplierId())
-                    .orElseThrow(() -> new InventoryException("Supplier not found", HttpStatus.NOT_FOUND));
-
             maintenance.setTicketNo(dto.getTicketNo());
             maintenance.setAsset(asset);
-            maintenance.setSupplier(supplier);
+            // supplier removed
             maintenance.setIssueTitle(dto.getIssueTitle());
             maintenance.setDescription(dto.getDescription());
             maintenance.setPriority(dto.getPriority());

@@ -30,9 +30,6 @@ public class Maintenance {
     @JoinColumn(name = "asset_id", nullable = false)
     private Asset asset;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "supplier_id", nullable = false)
-    private Supplier supplier;
 
     @Column(name = "issue_title", length = 255)
     private String issueTitle;
