@@ -4,5 +4,6 @@ public enum MaintenanceStatus {
     OPEN,
     IN_PROGRESS,
     COMPLETED,
-    CANCELLED
+    CANCELLED,
+    CANNOT_REPAIR,
 }
