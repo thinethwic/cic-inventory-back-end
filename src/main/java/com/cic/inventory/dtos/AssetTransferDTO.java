@@ -25,4 +25,22 @@ public class AssetTransferDTO {
     @NotNull(message = "Asset ID cannot be null")
     private Asset assetId;
 
+    // ── From/To references (only ID is needed — service will resolve full entity)
+    private EmployeeRef fromEmployeeId;
+    private EmployeeRef toEmployeeId;
+    private LocationRef fromLocationId;
+    private LocationRef toLocationId;
+
+    // ── Lightweight inner ref classes ────────────────────────────────────────
+    // Mirrors the { id: number } shape sent from the frontend
+    @Data
+    public static class EmployeeRef {
+        private Long id;
+    }
+
+    @Data
+    public static class LocationRef {
+        private Long id;
+    }
+
 }

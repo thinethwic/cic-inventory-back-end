@@ -29,10 +29,26 @@ public class AssetTransfer {
     @Column(name = "reason")
     private String reason;
 
-
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "asset_id", nullable = false)
     private Asset asset;
+
+    // ── From state (snapshot before transfer) ────────────────────────────────
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "from_employee_id", nullable = true)
+    private Employee fromEmployee;
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "to_employee_id", nullable = true)
+    private Employee toEmployee;
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "from_location_id", nullable = true)
+    private Location fromLocation;
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "to_location_id", nullable = true)
+    private Location toLocation;
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
