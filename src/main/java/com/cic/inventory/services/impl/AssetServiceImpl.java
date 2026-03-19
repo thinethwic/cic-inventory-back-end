@@ -162,18 +162,20 @@ public class AssetServiceImpl implements AssetService {
         dto.setCreatedAt(asset.getCreatedAt());
         dto.setUpdatedAt(asset.getUpdatedAt());
 
-        // Resolve location name
+        // Location — name string + ID
         if (asset.getLocation() != null) {
             dto.setLocation(asset.getLocation().getName());
+            dto.setLocationId(asset.getLocation().getId());   // ← ADD THIS
         }
 
-        // Resolve assigned employee as "empId - name"
+        // Employee — "empId - name" string + ID
         if (asset.getAssignedTo() != null) {
             Employee emp = asset.getAssignedTo();
             dto.setAssignedTo(emp.getEmpId() + " - " + emp.getName());
+            dto.setAssignedToId(emp.getId());                 // ← ADD THIS
         }
 
-        // Resolve supplier flat fields
+        // Supplier
         if (asset.getSupplier() != null) {
             dto.setSupplierId(asset.getSupplier().getId());
             dto.setSupplierName(asset.getSupplier().getName());

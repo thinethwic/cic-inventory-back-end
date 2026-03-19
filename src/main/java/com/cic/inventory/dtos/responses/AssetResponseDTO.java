@@ -17,13 +17,12 @@ public class AssetResponseDTO {
     private String serialNo;
     private AssetStatus status;
 
-    // Location resolved to its name string
     private String location;
+    private Long locationId;      // ← ADD THIS
 
-    // Employee resolved to "empId - name" string (nullable)
     private String assignedTo;
+    private Long assignedToId;    // ← ADD THIS
 
-    // Supplier flat fields
     private Long supplierId;
     private String supplierName;
 
