@@ -26,7 +26,7 @@ public class Maintenance {
     @Column(name = "ticket_no", nullable = false, unique = true, length = 20)
     private String ticketNo;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "asset_id", nullable = false)
     private Asset asset;
 
