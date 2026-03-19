@@ -16,7 +16,6 @@ import java.time.LocalDate;
 @AllArgsConstructor
 public class MaintenanceDTO {
 
-    @NotBlank(message = "Ticket number is required")
     private String ticketNo;
 
     @NotNull(message = "Asset is required")

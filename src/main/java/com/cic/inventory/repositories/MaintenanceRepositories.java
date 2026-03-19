@@ -11,5 +11,16 @@ import java.util.Optional;
 public interface MaintenanceRepositories extends JpaRepository<Maintenance,Long> {
     Optional<Maintenance> findTopByOrderByIdDesc();
 
-    boolean existsByTicketNo(String ticketNo);
+    // True if asset has any ticket NOT in the closed statuses list
+    boolean existsByAsset_IdAndStatusNotIn(
+            Long assetId,
+            List<MaintenanceStatus> closedStatuses
+    );
+
+    // Same but excludes a specific ticket id (used on UPDATE to exclude self)
+    boolean existsByAsset_IdAndStatusNotInAndIdNot(
+            Long assetId,
+            List<MaintenanceStatus> closedStatuses,
+            Long excludeId
+    );
 }
