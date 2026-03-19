@@ -26,17 +26,24 @@ public class AssetTransferServiceImpl implements AssetTransferService {
     private final AssetRepositories assetRepositories;
     @Override
     public AssetTransfer createNewAssetTransfer(AssetTransferDTO assetTransferDTO) {
-        try{
+        try {
             Asset asset = assetRepositories.findById(assetTransferDTO.getAssetId().getId())
                     .orElseThrow(() -> new InventoryException("Asset not found", HttpStatus.NOT_FOUND));
 
-            AssetTransfer assetTransfer = modelMapper.map(assetTransferDTO, AssetTransfer.class);
+            // Manual mapping — avoids ModelMapper mismatching assetId→asset
+            // and prevents lazy-load issues on the Asset entity graph
+            AssetTransfer assetTransfer = new AssetTransfer();
+            assetTransfer.setTransferType(assetTransferDTO.getTransferType());
+            assetTransfer.setTransferDate(assetTransferDTO.getTransferDate());
+            assetTransfer.setReason(assetTransferDTO.getReason());
             assetTransfer.setAsset(asset);
 
             return assetTransferRepositories.save(assetTransfer);
-        }catch (InventoryException inventoryException){
-            throw new InventoryException("Asset Not Found",HttpStatus.NOT_FOUND);
+
+        } catch (InventoryException inventoryException) {
+            throw inventoryException; // re-throw as-is, don't swallow with wrong message
         } catch (Exception exception) {
+            log.error("Failed to create asset transfer", exception); // log the REAL cause
             throw new InventoryException("Failed to create Asset Transfer", HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
