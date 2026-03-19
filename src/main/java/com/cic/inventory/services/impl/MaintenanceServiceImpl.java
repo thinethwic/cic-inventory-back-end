@@ -153,7 +153,11 @@ public class MaintenanceServiceImpl implements MaintenanceService {
                 );
             }
 
-            // ticketNo is immutable — never overwrite it from the DTO
+            // ── ticketNo is intentionally NOT updated ─────────────────────────
+            // ticketNo is immutable after creation — never overwrite it from DTO
+            // The old code did: maintenance.setTicketNo(dto.getTicketNo())
+            // which set it to null when frontend omits it → 500 constraint violation
+
             maintenance.setAsset(asset);
             maintenance.setIssueTitle(dto.getIssueTitle());
             maintenance.setDescription(dto.getDescription());
