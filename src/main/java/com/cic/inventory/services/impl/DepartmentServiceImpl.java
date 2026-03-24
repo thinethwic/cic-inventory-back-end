@@ -18,27 +18,38 @@ import org.springframework.stereotype.Service;
 @Slf4j
 @RequiredArgsConstructor
 public class DepartmentServiceImpl implements DepartmentService {
-    private final ModelMapper modelMapper;
     private final DepartmentRepositories departmentRepositories;
     private final LocationRepositories locationRepositories;
 
+    // ── helper: resolve a managed Location from just an ID ref ──────────────
+    private Location resolveLocation(Long locationId) {
+        if (locationId == null) {
+            throw new InventoryException("Location is required", HttpStatus.BAD_REQUEST);
+        }
+        return locationRepositories.findById(locationId)
+                .orElseThrow(() -> new InventoryException(
+                        "Location not found: " + locationId, HttpStatus.NOT_FOUND));
+    }
+
     @Override
-    public Department createNewDepartment(Department  department) {
+    public Department createNewDepartment(Department department) {
         try {
-            if (department.getLocation() == null || department.getLocation().getId() == null) {
-                throw new InventoryException("Location is required", HttpStatus.BAD_REQUEST);
-            }
+            Long locationId = (department.getLocation() != null)
+                    ? department.getLocation().getId()
+                    : null;
 
-            Location location = locationRepositories.findById(department.getLocation().getId())
-                    .orElseThrow(() -> new InventoryException("Location not found", HttpStatus.NOT_FOUND));
+            Location location = resolveLocation(locationId);
+            department.setLocation(location);  // replace transient ref with managed entity
 
-            department.setLocation(location);
             return departmentRepositories.save(department);
-        } catch (DataIntegrityViolationException e){
+
+        } catch (InventoryException e) {
+            throw e;  // let custom exceptions propagate as-is
+        } catch (DataIntegrityViolationException e) {
             log.error("Data integrity violation while creating Department: {}", e.getMessage());
             throw new InventoryException("Department with this code already exists", HttpStatus.CONFLICT);
-        } catch (Exception exception) {
-            log.error("Failed to create new department", exception);
+        } catch (Exception e) {
+            log.error("Failed to create new department", e);
             throw new InventoryException("Failed to create new department", HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
@@ -47,40 +58,53 @@ public class DepartmentServiceImpl implements DepartmentService {
     public Page<Department> getAllDepartments(Pageable pageable) {
         try {
             return departmentRepositories.findAll(pageable);
-        } catch (Exception exception) {
-            log.error("Failed to get all departments", exception);
+        } catch (Exception e) {
+            log.error("Failed to get all departments", e);
             throw new InventoryException("Failed to get all departments", HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
     @Override
     public Department getDepartmentById(Long id) {
-        try {
-            Department department =  departmentRepositories.findById(id).orElseThrow(
-                    () -> new InventoryException("Department Not Found", HttpStatus.NOT_FOUND)
-            );
-            log.info("Successfully fetched asset {}", id);
-            return department;
-        }catch (InventoryException inventoryException){
-            log.warn("Department not found with id: {} to fetch", id, inventoryException);
-            throw new InventoryException("Department Not found", HttpStatus.NOT_FOUND);
-        }
+        return departmentRepositories.findById(id)
+                .orElseThrow(() -> new InventoryException("Department not found", HttpStatus.NOT_FOUND));
     }
 
     @Override
     public Department updateDepartmentById(Long id, Department updatedDepartment) {
         try {
-            Department department =  departmentRepositories.findById(id).orElseThrow(
-                    () -> new InventoryException("Department Not Found", HttpStatus.NOT_FOUND)
-            );
-            modelMapper.map(updatedDepartment, department);
-            return departmentRepositories.save(department);
-        }catch (InventoryException inventoryException){
-            log.warn("Department not found with id: {} to fetch", id, inventoryException);
-            throw new InventoryException("Department Not found", HttpStatus.NOT_FOUND);
+            Department department = departmentRepositories.findById(id)
+                    .orElseThrow(() -> new InventoryException("Department not found", HttpStatus.NOT_FOUND));
 
-        } catch (Exception exception) {
-            log.error("Error updating department", exception);
+            // ── manually map only the safe scalar fields ─────────────────────
+            // Do NOT use modelMapper here — it overwrites location with a
+            // transient entity ref, which causes a TransientPropertyValueException
+            if (updatedDepartment.getName() != null) {
+                department.setName(updatedDepartment.getName());
+            }
+            if (updatedDepartment.getCode() != null) {
+                department.setCode(updatedDepartment.getCode());
+            }
+
+            // ── resolve location from DB by ID ────────────────────────────────
+            Long locationId = (updatedDepartment.getLocation() != null)
+                    ? updatedDepartment.getLocation().getId()
+                    : null;
+
+            if (locationId != null) {
+                Location location = resolveLocation(locationId);
+                department.setLocation(location);
+            }
+
+            return departmentRepositories.save(department);
+
+        } catch (InventoryException e) {
+            throw e;
+        } catch (DataIntegrityViolationException e) {
+            log.error("Data integrity violation while updating Department: {}", e.getMessage());
+            throw new InventoryException("Department with this code already exists", HttpStatus.CONFLICT);
+        } catch (Exception e) {
+            log.error("Error updating department with id {}", id, e);
             throw new InventoryException("Failed to update department", HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
@@ -89,8 +113,8 @@ public class DepartmentServiceImpl implements DepartmentService {
     public void deleteDepartment(Long id) {
         try {
             departmentRepositories.deleteById(id);
-        } catch (Exception exception) {
-            log.error("Failed to delete department with id {}", id, exception);
+        } catch (Exception e) {
+            log.error("Failed to delete department with id {}", id, e);
             throw new InventoryException("Failed to delete department", HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
