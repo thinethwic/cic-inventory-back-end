@@ -1,7 +1,9 @@
 package com.cic.inventory.services.impl;
 import com.cic.inventory.entities.Department;
+import com.cic.inventory.entities.Location;
 import com.cic.inventory.exceptions.InventoryException;
 import com.cic.inventory.repositories.DepartmentRepositories;
+import com.cic.inventory.repositories.LocationRepositories;
 import com.cic.inventory.services.DepartmentService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,10 +20,19 @@ import org.springframework.stereotype.Service;
 public class DepartmentServiceImpl implements DepartmentService {
     private final ModelMapper modelMapper;
     private final DepartmentRepositories departmentRepositories;
+    private final LocationRepositories locationRepositories;
 
     @Override
     public Department createNewDepartment(Department  department) {
         try {
+            if (department.getLocation() == null || department.getLocation().getId() == null) {
+                throw new InventoryException("Location is required", HttpStatus.BAD_REQUEST);
+            }
+
+            Location location = locationRepositories.findById(department.getLocation().getId())
+                    .orElseThrow(() -> new InventoryException("Location not found", HttpStatus.NOT_FOUND));
+
+            department.setLocation(location);
             return departmentRepositories.save(department);
         } catch (DataIntegrityViolationException e){
             log.error("Data integrity violation while creating Department: {}", e.getMessage());
