@@ -8,47 +8,35 @@ import com.cic.inventory.security.UserPrincipal;
 import com.cic.inventory.services.AssetService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
-
-import static com.cic.inventory.constants.UserRoles.ROLE_admin;
-import static com.cic.inventory.constants.UserRoles.ROLE_admin_user;
 
 @RestController
 @RequestMapping(path = "/api/v1/assets")
 @RequiredArgsConstructor
 public class AssetController extends AbstractController {
+
     private final AssetService assetService;
-    private final ModelMapper modelMapper;
 
     @GetMapping
+    // ✅ No @PreAuthorize — manual role check inside handles both admin and normal user
     public ResponseEntity<Page<AssetResponseDTO>> getAllAssets(
             Pageable pageable,
             Authentication authentication
     ) {
         UserPrincipal principal = (UserPrincipal) authentication.getPrincipal();
 
-        // Safely check for admin roles with or without the "ROLE_" prefix
+        // Matches "ROLE_Admin" set by AuthenticationFilter from roles array ["Admin"]
         boolean isAdmin = authentication.getAuthorities().stream()
-                .map(a -> a.getAuthority())
-                .anyMatch(role ->
-                        role.equalsIgnoreCase("ROLE_Admin") ||
-                                role.equalsIgnoreCase("Admin") ||
-                                role.equalsIgnoreCase("ROLE_admin_user") ||
-                                role.equalsIgnoreCase("admin_user")
-                );
+                .anyMatch(a -> a.getAuthority().equalsIgnoreCase("ROLE_Admin") ||
+                        a.getAuthority().equalsIgnoreCase("ROLE_admin_user"));
 
         if (isAdmin) {
-            // Admin → all assets, no location filter from JWT
+            // Admin → all assets, no location filter
             return sendOkResponse(assetService.getAllAsset(pageable));
         }
 
@@ -66,14 +54,12 @@ public class AssetController extends AbstractController {
 
     @GetMapping("{id}")
     public ResponseEntity<AssetResponseDTO> getAssetById(@PathVariable Long id) {
-        AssetResponseDTO asset = assetService.getAssetById(id);
-        return sendOkResponse(asset);
+        return sendOkResponse(assetService.getAssetById(id));
     }
 
     @PostMapping
     public ResponseEntity<Asset> createAsset(@Validated @RequestBody AssetDTO assetDTO) {
-        Asset asset = assetService.createNewAsset(assetDTO);
-        return sendCreatedResponse(asset);
+        return sendCreatedResponse(assetService.createNewAsset(assetDTO));
     }
 
     @PutMapping("{id}")
@@ -81,8 +67,7 @@ public class AssetController extends AbstractController {
             @PathVariable Long id,
             @Valid @RequestBody AssetDTO assetDTO
     ) {
-        Asset updatedAsset = assetService.updateAssetById(id, assetDTO);
-        return sendOkResponse(updatedAsset);
+        return sendOkResponse(assetService.updateAssetById(id, assetDTO));
     }
 
     @DeleteMapping("{id}")
@@ -93,9 +78,6 @@ public class AssetController extends AbstractController {
 
     @GetMapping("/scan/{code}")
     public ResponseEntity<Asset> scanAsset(@PathVariable String code) {
-        Asset asset = assetService.findByScan(code);
-        return sendOkResponse(asset);
+        return sendOkResponse(assetService.findByScan(code));
     }
-
-
 }
