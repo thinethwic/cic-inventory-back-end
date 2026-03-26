@@ -37,13 +37,18 @@ public class AssetController extends AbstractController {
     ) {
         UserPrincipal principal = (UserPrincipal) authentication.getPrincipal();
 
-        // Matches "ROLE_Admin" set by AuthenticationFilter from roles array ["Admin"]
+        // Safely check for admin roles with or without the "ROLE_" prefix
         boolean isAdmin = authentication.getAuthorities().stream()
-                .anyMatch(a -> a.getAuthority().equalsIgnoreCase("ROLE_Admin") ||
-                        a.getAuthority().equalsIgnoreCase("ROLE_admin_user"));
+                .map(a -> a.getAuthority())
+                .anyMatch(role ->
+                        role.equalsIgnoreCase("ROLE_Admin") ||
+                                role.equalsIgnoreCase("Admin") ||
+                                role.equalsIgnoreCase("ROLE_admin_user") ||
+                                role.equalsIgnoreCase("admin_user")
+                );
 
         if (isAdmin) {
-            // Admin → all assets, no location filter
+            // Admin → all assets, no location filter from JWT
             return sendOkResponse(assetService.getAllAsset(pageable));
         }
 
