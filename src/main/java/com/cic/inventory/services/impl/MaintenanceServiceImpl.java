@@ -88,6 +88,7 @@ public class MaintenanceServiceImpl implements MaintenanceService {
                     .assignedTo(dto.getAssignedTo())
                     .cost(dto.getCost())
                     .notes(dto.getNotes())
+                    .location(dto.getLocation())
                     .build();
 
             return maintenanceRepositories.save(maintenance);
@@ -168,6 +169,7 @@ public class MaintenanceServiceImpl implements MaintenanceService {
             maintenance.setAssignedTo(dto.getAssignedTo());
             maintenance.setCost(dto.getCost());
             maintenance.setNotes(dto.getNotes());
+            maintenance.setLocation(dto.getLocation());
 
             return maintenanceRepositories.save(maintenance);
 

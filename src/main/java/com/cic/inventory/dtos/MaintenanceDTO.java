@@ -36,5 +36,8 @@ public class MaintenanceDTO {
     private LocalDate dueDate;
     private String assignedTo;
     private BigDecimal cost;
+
+    private String location;
+
     private String notes;
 }
