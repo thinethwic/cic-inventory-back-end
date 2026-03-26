@@ -31,22 +31,23 @@ public class AssetController extends AbstractController {
     private final ModelMapper modelMapper;
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('" + ROLE_admin + "', '" + ROLE_admin_user + "')")
     public ResponseEntity<Page<AssetResponseDTO>> getAllAssets(
             Pageable pageable,
             Authentication authentication
     ) {
         UserPrincipal principal = (UserPrincipal) authentication.getPrincipal();
 
+        // Matches "ROLE_Admin" set by AuthenticationFilter from roles array ["Admin"]
         boolean isAdmin = authentication.getAuthorities().stream()
-                .anyMatch(a -> a.getAuthority().equals("ROLE_admin") ||
-                        a.getAuthority().equals("ROLE_admin_user"));
+                .anyMatch(a -> a.getAuthority().equalsIgnoreCase("ROLE_Admin") ||
+                        a.getAuthority().equalsIgnoreCase("ROLE_admin_user"));
 
         if (isAdmin) {
+            // Admin → all assets, no location filter
             return sendOkResponse(assetService.getAllAsset(pageable));
         }
 
-        // Normal user — scope to their JWT location
+        // Normal user → filter by location from JWT
         String location = principal.getLocation() != null
                 ? principal.getLocation().trim()
                 : "";
