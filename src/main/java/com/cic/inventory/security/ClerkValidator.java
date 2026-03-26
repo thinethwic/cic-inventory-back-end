@@ -137,6 +137,17 @@ public class ClerkValidator implements TokenValidator {
         }
     }
 
+    @Override
+    public String extractLocation(String token) {
+        try {
+            DecodedJWT decodedJWT = decodeToken(token);
+            return decodedJWT != null ? decodedJWT.getClaim("location").asString() : null;
+        } catch (Exception e) {
+            log.error("Error extracting location: {}", e.getMessage());
+            return null;
+        }
+    }
+
 
     private DecodedJWT decodeToken(String token) {
         try {

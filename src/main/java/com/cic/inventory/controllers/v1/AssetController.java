@@ -4,6 +4,7 @@ import com.cic.inventory.controllers.AbstractController;
 import com.cic.inventory.dtos.AssetDTO;
 import com.cic.inventory.dtos.responses.AssetResponseDTO;
 import com.cic.inventory.entities.Asset;
+import com.cic.inventory.security.UserPrincipal;
 import com.cic.inventory.services.AssetService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -12,10 +13,15 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+
+import static com.cic.inventory.constants.UserRoles.ROLE_admin;
+import static com.cic.inventory.constants.UserRoles.ROLE_admin_user;
 
 @RestController
 @RequestMapping(path = "/api/v1/assets")
@@ -25,9 +31,31 @@ public class AssetController extends AbstractController {
     private final ModelMapper modelMapper;
 
     @GetMapping
-    public ResponseEntity<Page<AssetResponseDTO>> getAllAssets(Pageable pageable) {
-        Page<AssetResponseDTO> mentors = assetService.getAllAsset(pageable);
-        return sendOkResponse(mentors);
+    @PreAuthorize("hasAnyRole('" + ROLE_admin + "', '" + ROLE_admin_user + "')")
+    public ResponseEntity<Page<AssetResponseDTO>> getAllAssets(
+            Pageable pageable,
+            Authentication authentication
+    ) {
+        UserPrincipal principal = (UserPrincipal) authentication.getPrincipal();
+
+        boolean isAdmin = authentication.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_admin") ||
+                        a.getAuthority().equals("ROLE_admin_user"));
+
+        if (isAdmin) {
+            return sendOkResponse(assetService.getAllAsset(pageable));
+        }
+
+        // Normal user — scope to their JWT location
+        String location = principal.getLocation() != null
+                ? principal.getLocation().trim()
+                : "";
+
+        if (location.isEmpty()) {
+            return sendOkResponse(Page.empty(pageable));
+        }
+
+        return sendOkResponse(assetService.getAssetsByLocation(location, pageable));
     }
 
     @GetMapping("{id}")

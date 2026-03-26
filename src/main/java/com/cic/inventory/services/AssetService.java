@@ -17,4 +17,6 @@ public interface AssetService {
     Asset updateAssetById(Long id,AssetDTO assetUpdateDTO);
     void deleteAsset(Long id);
     Asset findByScan(String code);
+
+    Page<AssetResponseDTO> getAssetsByLocation(String locationName, Pageable pageable);
 }

@@ -73,6 +73,18 @@ public class AssetServiceImpl implements AssetService {
     }
 
     @Override
+    public Page<AssetResponseDTO> getAssetsByLocation(String locationName, Pageable pageable) {
+        try {
+            return assetRepositories
+                    .findByLocation_NameIgnoreCase(locationName, pageable)
+                    .map(this::toResponse);
+        } catch (Exception e) {
+            log.error("Failed to get assets for location: {}", locationName, e);
+            throw new InventoryException("Failed to get assets", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @Override
     public AssetResponseDTO getAssetById(Long id) {
         try {
             Asset asset = assetRepositories.findById(id)

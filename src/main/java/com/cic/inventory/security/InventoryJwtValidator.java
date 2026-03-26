@@ -52,6 +52,11 @@ public class InventoryJwtValidator implements TokenValidator{
     }
 
     @Override
+    public String extractLocation(String token) {
+        return null;
+    }
+
+    @Override
     public boolean validateToken(String token) {
         try {
             Jwts.parser()

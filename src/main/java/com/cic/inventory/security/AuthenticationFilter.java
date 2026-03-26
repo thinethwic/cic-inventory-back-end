@@ -39,7 +39,11 @@ public class AuthenticationFilter extends OncePerRequestFilter {
             String firstName = tokenValidator.extractFirstName(token);
             String lastName = tokenValidator.extractLastName(token);
 
-            UserPrincipal userPrincipal = new UserPrincipal(userId,email,firstName,lastName);
+            String location = tokenValidator.extractLocation(token);
+
+
+
+            UserPrincipal userPrincipal = new UserPrincipal(userId,email,firstName,lastName,location);
             //UserPrincipal userPrincipal = UserPrincipal.builder().id(userId)...
 
 
