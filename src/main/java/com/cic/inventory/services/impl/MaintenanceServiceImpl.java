@@ -198,10 +198,10 @@ public class MaintenanceServiceImpl implements MaintenanceService {
     }
 
     @Override
-    public Page<Maintenance> getAssetsByLocation(String locationName, Pageable pageable) {
+    public Page<Maintenance> getAssetsByLocation(String locationName,Pageable pageable) {
         try {
             return maintenanceRepositories
-                    .findByLocation_name(locationName, pageable);
+                    .findByLocationContainingIgnoreCase(locationName.trim(),pageable);
         } catch (Exception e) {
             log.error("Failed to get assets for location: {}", locationName, e);
             throw new InventoryException("Failed to get assets", HttpStatus.INTERNAL_SERVER_ERROR);

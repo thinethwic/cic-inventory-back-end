@@ -1,6 +1,5 @@
 package com.cic.inventory.repositories;
 
-import com.cic.inventory.entities.Employee;
 import com.cic.inventory.entities.Maintenance;
 import com.cic.inventory.entities.types.MaintenanceStatus;
 import org.springframework.data.domain.Page;
@@ -26,5 +25,5 @@ public interface MaintenanceRepositories extends JpaRepository<Maintenance,Long>
             Long excludeId
     );
 
-    Page<Maintenance> findByLocation_name(String locationName, Pageable pageable);
+    Page<Maintenance> findByLocationContainingIgnoreCase(String location, Pageable pageable);
 }
