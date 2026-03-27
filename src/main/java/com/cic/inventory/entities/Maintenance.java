@@ -9,7 +9,7 @@ import org.hibernate.annotations.UpdateTimestamp;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.Date;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "maintenance")
@@ -65,9 +65,9 @@ public class Maintenance {
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
-    private Date createdAt;
+    private LocalDateTime createdAt;
 
     @UpdateTimestamp
     @Column(name = "updated_at")
-    private Date updatedAt;
+    private LocalDateTime updatedAt;
 }
