@@ -30,7 +30,7 @@ public interface MaintenanceRepositories extends JpaRepository<Maintenance,Long>
     Page<Maintenance> findByLocationContainingIgnoreCase(String location, Pageable pageable);
 
     @Query(value = """
-        SELECT m.* FROM maintenances m
+        SELECT m.* FROM maintenance m
         JOIN assets a ON m.asset_id = a.id
         WHERE (
             :search IS NULL OR
