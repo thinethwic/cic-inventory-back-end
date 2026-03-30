@@ -11,23 +11,39 @@ import lombok.Data;
 @Data
 public class EmployeeDTO {
 
+    private Long id;
+
     @NotNull(message = "Employee ID cannot be null")
     private String empId;
 
-    @NotNull(message = "Department ID cannot be null")
-    private Department department;
+    @NotNull
+    private DepartmentRef department;
 
-    @NotNull(message = "Location ID cannot be null")
-    private Location location;
+    @NotNull
+    private LocationRef location;
 
     private String name;
 
-    @Size(max = 10, message = "Phone number must be 10 characters")
+    @Size(max = 10)
     private String phone_no;
 
-    @Email(message = "Email must be valid")
+    @Email
     private String email;
 
-    @NotNull(message = "Employee status cannot be null")
+    @NotNull
     private EmployeeStatus employeeStatus;
+
+    @Data
+    public static class DepartmentRef {
+        private Long id;
+        private String name;
+        private String code;
+    }
+
+    @Data
+    public static class LocationRef {
+        private Long id;
+        private String name;
+        private String code;
+    }
 }

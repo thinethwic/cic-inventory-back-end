@@ -24,11 +24,11 @@ public class Employee {
     private String empId;
 
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "department_id", nullable = false)
     private Department department;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "location_id", nullable = false)
     private Location location;
 
