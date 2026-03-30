@@ -24,28 +24,38 @@ public class MaintenanceController extends AbstractController {
     @GetMapping
     public ResponseEntity<Page<Maintenance>> getAllMaintenance(
             Pageable pageable,
-            Authentication authentication) {
+            Authentication authentication,
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) String priority,
+            @RequestParam(required = false) String location) {
+
         UserPrincipal principal = (UserPrincipal) authentication.getPrincipal();
 
-        // Matches "ROLE_Admin" set by AuthenticationFilter from roles array ["Admin"]
         boolean isAdmin = authentication.getAuthorities().stream()
                 .anyMatch(a -> a.getAuthority().equalsIgnoreCase("ROLE_Admin") ||
                         a.getAuthority().equalsIgnoreCase("ROLE_admin_user"));
 
         if (isAdmin) {
-            // Admin → all assets, no location filter
-            return sendOkResponse(maintenanceService.getAllMaintenance(pageable));
+            return sendOkResponse(
+                    maintenanceService.getAllMaintenanceFiltered(
+                            pageable, search, status, priority, location)
+            );
         }
 
-        String location = principal.getLocation() != null
+        // Non-admin: always force their own location
+        String userLocation = principal.getLocation() != null
                 ? principal.getLocation().trim()
                 : "";
 
-        if (location.isEmpty()) {
+        if (userLocation.isEmpty()) {
             return sendOkResponse(Page.empty(pageable));
         }
 
-        return sendOkResponse(maintenanceService.getAssetsByLocation(location, pageable));
+        return sendOkResponse(
+                maintenanceService.getAllMaintenanceFiltered(
+                        pageable, search, status, priority, userLocation)
+        );
     }
 
     @GetMapping("{id}")
@@ -54,7 +64,8 @@ public class MaintenanceController extends AbstractController {
     }
 
     @PostMapping
-    public ResponseEntity<Maintenance> createMaintenance(@Validated @RequestBody MaintenanceDTO maintenanceDTO) {
+    public ResponseEntity<Maintenance> createMaintenance(
+            @Validated @RequestBody MaintenanceDTO maintenanceDTO) {
         return sendCreatedResponse(maintenanceService.createNewMaintenance(maintenanceDTO));
     }
 

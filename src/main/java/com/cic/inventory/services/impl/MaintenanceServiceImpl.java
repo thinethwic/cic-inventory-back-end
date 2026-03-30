@@ -207,4 +207,37 @@ public class MaintenanceServiceImpl implements MaintenanceService {
             throw new InventoryException("Failed to get assets", HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+
+    @Override
+    public Page<Maintenance> getAllMaintenanceFiltered(
+            Pageable pageable,
+            String search,
+            String status,
+            String priority,
+            String location) {
+
+        // Convert frontend labels → backend DB enum names
+        // Frontend sends "OPEN", "IN_PROGRESS" etc (already converted in fetchMaintenancePage)
+        // We just null-out blanks
+        String resolvedSearch   = (search   != null && !search.isBlank())   ? search.trim()    : null;
+        String resolvedStatus   = (status   != null && !status.isBlank())   ? status.trim()    : null;
+        String resolvedPriority = (priority != null && !priority.isBlank()) ? priority.trim()  : null;
+        String resolvedLocation = (location != null && !location.isBlank()) ? location.trim()  : null;
+
+        try {
+            return maintenanceRepositories.findAllFiltered(
+                    resolvedSearch,
+                    resolvedStatus,
+                    resolvedPriority,
+                    resolvedLocation,
+                    pageable
+            );
+        } catch (Exception e) {
+            log.error("Failed to fetch filtered maintenance", e);
+            throw new InventoryException(
+                    "Failed to fetch maintenance records",
+                    HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+    }
 }

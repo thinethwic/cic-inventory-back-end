@@ -14,4 +14,11 @@ public interface MaintenanceService {
     void deleteMaintenance(Long id);
 
     Page<Maintenance> getAssetsByLocation(String locationName, Pageable pageable);
+    Page<Maintenance> getAllMaintenanceFiltered(
+            Pageable pageable,
+            String search,
+            String status,
+            String priority,
+            String location
+    );
 }
