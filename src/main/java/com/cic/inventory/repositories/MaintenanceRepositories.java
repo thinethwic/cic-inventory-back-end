@@ -29,20 +29,35 @@ public interface MaintenanceRepositories extends JpaRepository<Maintenance,Long>
 
     Page<Maintenance> findByLocationContainingIgnoreCase(String location, Pageable pageable);
 
-    @Query("""
-    SELECT m FROM Maintenance m
-    JOIN m.asset a
-    WHERE (
-        :search IS NULL OR
-        LOWER(m.ticketNo)   LIKE LOWER(CONCAT('%', :search, '%')) OR
-        LOWER(m.issueTitle) LIKE LOWER(CONCAT('%', :search, '%')) OR
-        LOWER(COALESCE(m.assignedTo, '')) LIKE LOWER(CONCAT('%', :search, '%')) OR
-        LOWER(COALESCE(a.assetCode, '')) LIKE LOWER(CONCAT('%', :search, '%'))
-    )
-    AND (:status   IS NULL OR CAST(m.status   AS string) = :status)
-    AND (:priority IS NULL OR CAST(m.priority AS string) = :priority)
-    AND (:location IS NULL OR LOWER(COALESCE(m.location, '')) = LOWER(:location))
-    """)
+    @Query(value = """
+        SELECT m.* FROM maintenances m
+        JOIN assets a ON m.asset_id = a.id
+        WHERE (
+            :search IS NULL OR
+            LOWER(m.ticket_no::text)                       LIKE LOWER(CONCAT('%', :search, '%')) OR
+            LOWER(m.issue_title::text)                     LIKE LOWER(CONCAT('%', :search, '%')) OR
+            LOWER(COALESCE(m.assigned_to, '')::text)       LIKE LOWER(CONCAT('%', :search, '%')) OR
+            LOWER(COALESCE(a.asset_code, '')::text)        LIKE LOWER(CONCAT('%', :search, '%'))
+        )
+        AND (:status   IS NULL OR m.status::text   = :status)
+        AND (:priority IS NULL OR m.priority::text = :priority)
+        AND (:location IS NULL OR LOWER(COALESCE(m.location, '')::text) = LOWER(:location))
+        """,
+            countQuery = """
+        SELECT COUNT(*) FROM maintenances m
+        JOIN assets a ON m.asset_id = a.id
+        WHERE (
+            :search IS NULL OR
+            LOWER(m.ticket_no::text)                       LIKE LOWER(CONCAT('%', :search, '%')) OR
+            LOWER(m.issue_title::text)                     LIKE LOWER(CONCAT('%', :search, '%')) OR
+            LOWER(COALESCE(m.assigned_to, '')::text)       LIKE LOWER(CONCAT('%', :search, '%')) OR
+            LOWER(COALESCE(a.asset_code, '')::text)        LIKE LOWER(CONCAT('%', :search, '%'))
+        )
+        AND (:status   IS NULL OR m.status::text   = :status)
+        AND (:priority IS NULL OR m.priority::text = :priority)
+        AND (:location IS NULL OR LOWER(COALESCE(m.location, '')::text) = LOWER(:location))
+        """,
+            nativeQuery = true)
     Page<Maintenance> findAllFiltered(
             @Param("search")   String search,
             @Param("status")   String status,
