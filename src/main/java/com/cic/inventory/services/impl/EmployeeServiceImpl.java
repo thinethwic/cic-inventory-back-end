@@ -99,17 +99,35 @@ public class EmployeeServiceImpl implements EmployeeService {
     @Override
     public Employee updateEmployeeById(Long id, Employee updatedEmployee) {
         try {
-            Employee employee =  employeeRepositories.findById(id).orElseThrow(
-                    () -> new InventoryException("Location Not Found", HttpStatus.NOT_FOUND)
+            Employee employee = employeeRepositories.findById(id).orElseThrow(
+                    () -> new InventoryException("Employee Not Found", HttpStatus.NOT_FOUND)
             );
+
+            // Handle department update
+            if (updatedEmployee.getDepartment() != null && updatedEmployee.getDepartment().getId() != null) {
+                Department department = departmentRepositories.findById(updatedEmployee.getDepartment().getId())
+                        .orElseThrow(() -> new InventoryException("Department not found", HttpStatus.NOT_FOUND));
+                employee.setDepartment(department);
+            }
+
+            // Handle location update
+            if (updatedEmployee.getLocation() != null && updatedEmployee.getLocation().getId() != null) {
+                Location location = locationRepositories.findById(updatedEmployee.getLocation().getId())
+                        .orElseThrow(() -> new InventoryException("Location not found", HttpStatus.NOT_FOUND));
+                employee.setLocation(location);
+            }
+
             modelMapper.map(updatedEmployee, employee);
+            employee.setId(id); // restore ID after mapping
+
             return employeeRepositories.save(employee);
-        }catch (InventoryException inventoryException){
-            log.warn("Employee not found with id: {} to fetch", id, inventoryException);
-            throw new InventoryException("Employee Not found", HttpStatus.NOT_FOUND);
+
+        } catch (InventoryException inventoryException) {
+            log.warn("InventoryException while updating employee with id: {}", id, inventoryException);
+            throw inventoryException; // preserve original status and message
 
         } catch (Exception exception) {
-            log.error("Error updating employee", exception);
+            log.error("Error updating employee with id: {}", id, exception);
             throw new InventoryException("Failed to update employee", HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }

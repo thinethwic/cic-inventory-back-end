@@ -22,36 +22,35 @@ public class EmployeeController extends AbstractController {
     private final EmployeeService employeeService;
 
     @GetMapping
-    public ResponseEntity<Page<Employee>> getAllEmployees(Pageable pageable) {
-        Page<Employee> employees = employeeService.getAllEmployees(pageable);
+    public ResponseEntity<Page<EmployeeDTO>> getAllEmployees(Pageable pageable) {
+        Page<EmployeeDTO> employees = employeeService.getAllEmployees(pageable)
+                .map(emp -> modelMapper.map(emp, EmployeeDTO.class));
         return sendOkResponse(employees);
     }
 
     @GetMapping("{id}")
-    public ResponseEntity<Employee> getEmployeeById(@PathVariable Long id) {
+    public ResponseEntity<EmployeeDTO> getEmployeeById(@PathVariable Long id) {
         Employee employee = employeeService.getEmployeeById(id);
-        return sendOkResponse(employee);
+        return sendOkResponse(modelMapper.map(employee, EmployeeDTO.class));
     }
 
     @PostMapping
-    public ResponseEntity<Employee> createEmployee(@Validated @RequestBody EmployeeDTO employeeDTO) {
-        Employee employee = modelMapper.map(employeeDTO,Employee.class);
-        Employee createEmployee =employeeService.createNewEmployee(employee);
-        return sendCreatedResponse(createEmployee);
+    public ResponseEntity<EmployeeDTO> createEmployee(@Validated @RequestBody EmployeeDTO employeeDTO) {
+        Employee employee = modelMapper.map(employeeDTO, Employee.class);
+        Employee createdEmployee = employeeService.createNewEmployee(employee);
+        return sendCreatedResponse(modelMapper.map(createdEmployee, EmployeeDTO.class));
     }
 
     @PutMapping("{id}")
-    public ResponseEntity<Employee> updateEmployee(@PathVariable Long id, @Valid @RequestBody EmployeeDTO updateEmployeeDTO ) {
+    public ResponseEntity<EmployeeDTO> updateEmployee(@PathVariable Long id, @Validated @RequestBody EmployeeDTO updateEmployeeDTO) {
         Employee employee = modelMapper.map(updateEmployeeDTO, Employee.class);
-        Employee updatedEmployeeById = employeeService.updateEmployeeById(id, employee);
-        return sendOkResponse(updatedEmployeeById);
-
+        Employee updatedEmployee = employeeService.updateEmployeeById(id, employee);
+        return sendOkResponse(modelMapper.map(updatedEmployee, EmployeeDTO.class));
     }
 
     @DeleteMapping("{id}")
-    public ResponseEntity<Employee> deleteEmployee(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteEmployee(@PathVariable Long id) {
         employeeService.deleteEmployee(id);
         return sendNoContentResponse();
     }
-
 }
