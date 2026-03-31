@@ -8,6 +8,7 @@ import com.cic.inventory.security.UserPrincipal;
 import com.cic.inventory.services.AssetService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
@@ -18,6 +19,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping(path = "/api/v1/assets")
 @RequiredArgsConstructor
+@Slf4j
 public class AssetController extends AbstractController {
 
     private final AssetService assetService;
@@ -47,17 +49,19 @@ public class AssetController extends AbstractController {
                 ? principal.getLocation().trim()
                 : "";
 
-// Has both department and location → filter by department
+// ← ADD THIS
+        log.info("Non-admin access → departmentName: '{}', location: '{}'", departmentName, location);
+
         if (!departmentName.isEmpty()) {
+            log.info("Filtering by department: '{}'", departmentName);
             return sendOkResponse(assetService.getAssetsByDepartment(departmentName, pageable));
         }
 
-// Has only location → filter by location (original behavior)
         if (!location.isEmpty()) {
+            log.info("Filtering by location: '{}'", location);
             return sendOkResponse(assetService.getAssetsByLocation(location, pageable));
         }
 
-// Has neither → empty
         return sendOkResponse(Page.empty(pageable));
     }
 
