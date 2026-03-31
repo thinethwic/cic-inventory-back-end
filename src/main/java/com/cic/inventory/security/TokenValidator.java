@@ -11,4 +11,5 @@ public interface TokenValidator {
     String extractEmail(String token);
 
     String extractLocation(String token);
+    String extractDepartmentName(String token);
 }

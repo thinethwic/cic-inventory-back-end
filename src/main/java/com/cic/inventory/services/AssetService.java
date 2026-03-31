@@ -19,4 +19,5 @@ public interface AssetService {
     Asset findByScan(String code);
 
     Page<AssetResponseDTO> getAssetsByLocation(String locationName, Pageable pageable);
+    Page<AssetResponseDTO> getAssetsByDepartment(String departmentName, Pageable pageable);
 }

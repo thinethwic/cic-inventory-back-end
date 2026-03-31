@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Value;
 import java.net.URL;
 import java.security.PublicKey;
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 public class ClerkValidator implements TokenValidator {
@@ -144,6 +145,16 @@ public class ClerkValidator implements TokenValidator {
             return decodedJWT != null ? decodedJWT.getClaim("location").asString() : null;
         } catch (Exception e) {
             log.error("Error extracting location: {}", e.getMessage());
+            return null;
+        }
+    }
+
+    public String extractDepartmentName(String token) {
+        try {
+            DecodedJWT decodedJWT = decodeToken(token);
+            return decodedJWT != null ? decodedJWT.getClaim("department").asString() : null;
+        } catch (Exception e) {
+            log.error("Error extracting department: {}", e.getMessage());
             return null;
         }
     }

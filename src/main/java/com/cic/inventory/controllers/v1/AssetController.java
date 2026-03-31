@@ -36,20 +36,29 @@ public class AssetController extends AbstractController {
                         a.getAuthority().equalsIgnoreCase("ROLE_admin_user"));
 
         if (isAdmin) {
-            // Admin → all assets, no location filter
             return sendOkResponse(assetService.getAllAsset(pageable));
         }
 
-        // Normal user → filter by location from JWT
+        String departmentName = principal.getDepartmentName() != null
+                ? principal.getDepartmentName().trim()
+                : "";
+
         String location = principal.getLocation() != null
                 ? principal.getLocation().trim()
                 : "";
 
-        if (location.isEmpty()) {
-            return sendOkResponse(Page.empty(pageable));
+// Has both department and location → filter by department
+        if (!departmentName.isEmpty()) {
+            return sendOkResponse(assetService.getAssetsByDepartment(departmentName, pageable));
         }
 
-        return sendOkResponse(assetService.getAssetsByLocation(location, pageable));
+// Has only location → filter by location (original behavior)
+        if (!location.isEmpty()) {
+            return sendOkResponse(assetService.getAssetsByLocation(location, pageable));
+        }
+
+// Has neither → empty
+        return sendOkResponse(Page.empty(pageable));
     }
 
     @GetMapping("{id}")

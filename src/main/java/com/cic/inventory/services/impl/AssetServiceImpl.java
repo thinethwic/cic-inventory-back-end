@@ -85,6 +85,18 @@ public class AssetServiceImpl implements AssetService {
     }
 
     @Override
+    public Page<AssetResponseDTO> getAssetsByDepartment(String departmentName, Pageable pageable) {
+        try {
+            return assetRepositories
+                    .findByAssignedTo_Department_NameIgnoreCase(departmentName, pageable)
+                    .map(this::toResponse);
+        } catch (Exception e) {
+            log.error("Failed to get assets for department: {}", departmentName, e);
+            throw new InventoryException("Failed to get assets", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @Override
     public AssetResponseDTO getAssetById(Long id) {
         try {
             Asset asset = assetRepositories.findById(id)

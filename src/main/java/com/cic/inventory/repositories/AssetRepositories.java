@@ -15,4 +15,9 @@ public interface AssetRepositories extends JpaRepository<Asset, Long> {
     Optional<Asset> findByAssetCode(String assetCode);
 
     Page<Asset> findByLocation_NameIgnoreCase(String locationName, Pageable pageable);
+
+    Page<Asset> findByAssignedTo_Department_NameIgnoreCase(
+            String departmentName,
+            Pageable pageable
+    );
 }
