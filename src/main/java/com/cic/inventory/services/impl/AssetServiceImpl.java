@@ -12,6 +12,8 @@ import com.cic.inventory.services.AssetService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -30,6 +32,7 @@ public class AssetServiceImpl implements AssetService {
     private final SupplierRepositories supplierRepositories;
 
     @Override
+    @CacheEvict(value = "assets", allEntries = true)
     public Asset createNewAsset(AssetDTO assetDTO) {
         try {
             Location location = locationRepositories.findById(assetDTO.getLocationId())
@@ -63,6 +66,7 @@ public class AssetServiceImpl implements AssetService {
     }
 
     @Override
+    @Cacheable(value = "assets", key = "#pageable.pageNumber + '_' + #pageable.pageSize")
     public Page<AssetResponseDTO> getAllAsset(Pageable pageable) {
         try {
             return assetRepositories.findAll(pageable).map(this::toResponse);
