@@ -54,18 +54,19 @@ public class UserManagementServiceImpl implements UserManagementService {
         Location location = null;
         Department department = null;
 
-        
+
         if (targetRole != UserRole.ADMIN) {
-            if (request.locationId() == null && request.departmentId() == null) {
+            // ✅ Location is mandatory
+            if (request.locationId() == null) {
                 throw new InventoryException(
-                        "Location or department is required for non-admin users",
+                        "Location is required for non-admin users",
                         HttpStatus.BAD_REQUEST
                 );
             }
-            if (request.locationId() != null) {
-                location = locationRepositories.findById(request.locationId())
-                        .orElseThrow(() -> new InventoryException("Location not found", HttpStatus.NOT_FOUND));
-            }
+            location = locationRepositories.findById(request.locationId())
+                    .orElseThrow(() -> new InventoryException("Location not found", HttpStatus.NOT_FOUND));
+
+            // Department is optional
             if (request.departmentId() != null) {
                 department = departmentRepositories.findById(request.departmentId())
                         .orElseThrow(() -> new InventoryException("Department not found", HttpStatus.NOT_FOUND));
@@ -112,27 +113,26 @@ public class UserManagementServiceImpl implements UserManagementService {
         if (request.password() != null && !request.password().isBlank())
             existingUser.setPassword(passwordEncoder.encode(request.password()));
 
-        // ✅ Look up location entity by ID
         if (request.locationId() != null) {
             Location location = locationRepositories.findById(request.locationId())
                     .orElseThrow(() -> new InventoryException("Location not found", HttpStatus.NOT_FOUND));
             existingUser.setLocation(location);
         }
 
-        // ✅ Look up department entity by ID
+
         if (request.departmentId() != null) {
             Department department = departmentRepositories.findById(request.departmentId())
                     .orElseThrow(() -> new InventoryException("Department not found", HttpStatus.NOT_FOUND));
             existingUser.setDepartment(department);
-        } else if (request.departmentId() == null && targetRole == UserRole.ADMIN) {
+        } else {
+
             existingUser.setDepartment(null);
         }
 
-        // Validate non-admin still has at least one scope
         if (existingUser.getRole() != UserRole.ADMIN) {
-            if (existingUser.getLocation() == null && existingUser.getDepartment() == null) {
+            if (existingUser.getLocation() == null) {
                 throw new InventoryException(
-                        "Location or department is required for non-admin users",
+                        "Location is required for non-admin users",
                         HttpStatus.BAD_REQUEST
                 );
             }
@@ -169,25 +169,5 @@ public class UserManagementServiceImpl implements UserManagementService {
             return;
         }
         throw new InventoryException("You do not have permission to manage this user", HttpStatus.FORBIDDEN);
-    }
-
-    private void validateScopeFields(UserRole role, String location, String department) {
-        boolean hasLocation = location != null && !location.isBlank();
-        boolean hasDepartment = department != null && !department.isBlank();
-
-        if (role == UserRole.ADMIN) {
-            return;
-        }
-
-        if (!hasLocation && !hasDepartment) {
-            throw new InventoryException(
-                    "Location or department is required for non-admin users",
-                    HttpStatus.BAD_REQUEST
-            );
-        }
-    }
-
-    private String normalizeScopeValue(String value) {
-        return value == null ? "" : value.trim();
     }
 }
