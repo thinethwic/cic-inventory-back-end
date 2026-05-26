@@ -20,4 +20,10 @@ public interface AssetRepositories extends JpaRepository<Asset, Long> {
             String departmentName,
             Pageable pageable
     );
+
+    Page<Asset> findByLocation_NameIgnoreCaseAndAssignedTo_Department_NameIgnoreCase(
+            String locationName,
+            String departmentName,
+            Pageable pageable
+    );
 }

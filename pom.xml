@@ -81,21 +81,6 @@
 			<version>0.12.3</version>
 			<scope>runtime</scope>
 		</dependency>
-
-		<!-- Auth0 Java JWT for simpler JWT handling -->
-		<dependency>
-			<groupId>com.auth0</groupId>
-			<artifactId>java-jwt</artifactId>
-			<version>4.4.0</version>
-		</dependency>
-
-		<!-- JWKS Provider -->
-		<dependency>
-			<groupId>com.auth0</groupId>
-			<artifactId>jwks-rsa</artifactId>
-			<version>0.22.1</version>
-		</dependency>
-
 		<!-- JPA/Hibernate for database -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>

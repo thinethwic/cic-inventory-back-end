@@ -7,8 +7,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-
 @Service
 public interface AssetService {
     Asset createNewAsset(AssetDTO assetDTO);
@@ -20,4 +18,5 @@ public interface AssetService {
 
     Page<AssetResponseDTO> getAssetsByLocation(String locationName, Pageable pageable);
     Page<AssetResponseDTO> getAssetsByDepartment(String departmentName, Pageable pageable);
+    Page<AssetResponseDTO> getAssetsByAccessScope(String locationName, String departmentName, Pageable pageable);
 }

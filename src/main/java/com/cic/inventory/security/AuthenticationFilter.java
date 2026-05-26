@@ -32,7 +32,7 @@ public class AuthenticationFilter extends OncePerRequestFilter {
 
         if (token != null && tokenValidator.validateToken(token)) {
             String userId = tokenValidator.extractUserId(token);
-//            List<String> roles = new ArrayList<>();
+            List<String> roles = tokenValidator.extractRoles(token);
 
             // extract user id, first name, last name, email from token
             String email = tokenValidator.extractEmail(token);
@@ -44,16 +44,14 @@ public class AuthenticationFilter extends OncePerRequestFilter {
 
 
 
-            UserPrincipal userPrincipal = new UserPrincipal(userId,email,firstName,lastName,location,departmentName);
+            String primaryRole = roles != null && !roles.isEmpty() ? roles.get(0) : "";
+            UserPrincipal userPrincipal = new UserPrincipal(userId,email,firstName,lastName,location,departmentName, primaryRole);
             //UserPrincipal userPrincipal = UserPrincipal.builder().id(userId)...
 
 
-            // Extract roles from the token
-            List<String> roles = tokenValidator.extractRoles(token);
-
             List<GrantedAuthority> authorities = roles != null ?
                     roles.stream()
-                            .map(role -> new SimpleGrantedAuthority("ROLE_" + role))
+                            .map(roleName -> new SimpleGrantedAuthority("ROLE_" + roleName))
                             .collect(Collectors.toList()) :
                     new ArrayList<>();
 

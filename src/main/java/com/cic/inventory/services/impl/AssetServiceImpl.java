@@ -15,6 +15,7 @@ import org.modelmapper.ModelMapper;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.InvalidDataAccessResourceUsageException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -70,6 +71,9 @@ public class AssetServiceImpl implements AssetService {
     public Page<AssetResponseDTO> getAllAsset(Pageable pageable) {
         try {
             return assetRepositories.findAll(pageable).map(this::toResponse);
+        } catch (InvalidDataAccessResourceUsageException e) {
+            log.error("Database schema mismatch while fetching assets: {}", e.getMostSpecificCause().getMessage());
+            throw new InventoryException("Service unavailable due to a configuration issue. Please contact support.", HttpStatus.INTERNAL_SERVER_ERROR);
         } catch (Exception e) {
             log.error("Failed to get all assets", e);
             throw new InventoryException("Failed to get all assets", HttpStatus.INTERNAL_SERVER_ERROR);
@@ -96,6 +100,43 @@ public class AssetServiceImpl implements AssetService {
                     .map(this::toResponse);
         } catch (Exception e) {
             log.error("Failed to get assets for department: {}", departmentName, e);
+            throw new InventoryException("Failed to get assets", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @Override
+    public Page<AssetResponseDTO> getAssetsByAccessScope(
+            String locationName,
+            String departmentName,
+            Pageable pageable
+    ) {
+        try {
+            boolean hasLocation = locationName != null && !locationName.isBlank();
+            boolean hasDepartment = departmentName != null && !departmentName.isBlank();
+
+            if (hasLocation && hasDepartment) {
+                return assetRepositories
+                        .findByLocation_NameIgnoreCaseAndAssignedTo_Department_NameIgnoreCase(
+                                locationName,
+                                departmentName,
+                                pageable
+                        )
+                        .map(this::toResponse);
+            }
+
+            if (hasDepartment) {
+                return getAssetsByDepartment(departmentName, pageable);
+            }
+
+            if (hasLocation) {
+                return getAssetsByLocation(locationName, pageable);
+            }
+
+            return Page.empty(pageable);
+        } catch (InventoryException exception) {
+            throw exception;
+        } catch (Exception exception) {
+            log.error("Failed to get assets for access scope", exception);
             throw new InventoryException("Failed to get assets", HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }

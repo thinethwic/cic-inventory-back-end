@@ -14,6 +14,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping(path = "/api/v1/maintenances")
 @RequiredArgsConstructor
@@ -56,6 +58,27 @@ public class MaintenanceController extends AbstractController {
                 maintenanceService.getAllMaintenanceFiltered(
                         pageable, search, status, priority, userLocation)
         );
+    }
+
+    @GetMapping("/locations")
+    public ResponseEntity<List<String>> getMaintenanceLocations(Authentication authentication) {
+        UserPrincipal principal = (UserPrincipal) authentication.getPrincipal();
+
+        boolean isAdmin = authentication.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equalsIgnoreCase("ROLE_Admin") ||
+                        a.getAuthority().equalsIgnoreCase("ROLE_admin_user"));
+
+        List<String> locations = maintenanceService.getAllMaintenance(Pageable.unpaged())
+                .stream()
+                .map(Maintenance::getLocation)
+                .filter(location -> location != null && !location.isBlank())
+                .map(String::trim)
+                .filter(location -> isAdmin || location.equalsIgnoreCase(principal.getLocation()))
+                .distinct()
+                .sorted(String.CASE_INSENSITIVE_ORDER)
+                .toList();
+
+        return sendOkResponse(locations);
     }
 
     @GetMapping("{id}")

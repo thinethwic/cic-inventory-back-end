@@ -24,7 +24,14 @@ public class InventoryAuthenticationEntryPoint implements AuthenticationEntryPoi
 
     @Override
     public void commence(HttpServletRequest request, HttpServletResponse response, AuthenticationException authException) throws IOException, ServletException {
-        log.error("Unauthorized error: {}", authException.getMessage());
+        log.error(
+                "Unauthorized request: method={}, uri={}, query={}, authHeaderPresent={}, message={}",
+                request.getMethod(),
+                request.getRequestURI(),
+                request.getQueryString(),
+                request.getHeader("Authorization") != null,
+                authException.getMessage()
+        );
 
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
@@ -32,6 +39,7 @@ public class InventoryAuthenticationEntryPoint implements AuthenticationEntryPoi
         Map<String, Object> body = new HashMap<>();
         body.put("status", HttpServletResponse.SC_UNAUTHORIZED);
         body.put("error", "Unauthorized or Token has expired");
+        body.put("path", request.getRequestURI());
 
         response.getWriter().write(objectMapper.writeValueAsString(body));
     }

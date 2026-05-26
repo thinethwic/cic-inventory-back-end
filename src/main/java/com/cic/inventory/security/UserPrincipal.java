@@ -16,4 +16,5 @@ public class UserPrincipal {
     private String lastName;
     private String location;
     private String departmentName;
+    private String role;
 }

@@ -52,17 +52,9 @@ public class AssetController extends AbstractController {
 // ← ADD THIS
         log.info("Non-admin access → departmentName: '{}', location: '{}'", departmentName, location);
 
-        if (!departmentName.isEmpty()) {
-            log.info("Filtering by department: '{}'", departmentName);
-            return sendOkResponse(assetService.getAssetsByDepartment(departmentName, pageable));
-        }
-
-        if (!location.isEmpty()) {
-            log.info("Filtering by location: '{}'", location);
-            return sendOkResponse(assetService.getAssetsByLocation(location, pageable));
-        }
-
-        return sendOkResponse(Page.empty(pageable));
+        return sendOkResponse(
+                assetService.getAssetsByAccessScope(location, departmentName, pageable)
+        );
     }
 
     @GetMapping("{id}")
