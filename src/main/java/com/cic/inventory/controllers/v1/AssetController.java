@@ -41,13 +41,13 @@ public class AssetController extends AbstractController {
             return sendOkResponse(assetService.getAllAsset(pageable));
         }
 
-        String departmentName = principal.getDepartmentName() != null
-                ? principal.getDepartmentName().trim()
-                : "";
+        String departmentName = (principal.getDepartmentName() == null || principal.getDepartmentName().isBlank())
+                ? null
+                : principal.getDepartmentName().trim();
 
-        String location = principal.getLocation() != null
-                ? principal.getLocation().trim()
-                : "";
+        String location = (principal.getLocation() == null || principal.getLocation().isBlank())
+                ? null
+                : principal.getLocation().trim();
 
 // ← ADD THIS
         log.info("Non-admin access → departmentName: '{}', location: '{}'", departmentName, location);

@@ -31,11 +31,14 @@ public interface AssetRepositories extends JpaRepository<Asset, Long> {
 
     // Replace the combined query with a LEFT JOIN version
     @Query("""
-    SELECT a FROM Asset a
+    SELECT DISTINCT a FROM Asset a
     LEFT JOIN a.assignedTo emp
     LEFT JOIN emp.department dept
-    WHERE (:locationName IS NULL OR LOWER(a.location.name) = LOWER(:locationName))
-    AND (:departmentName IS NULL OR LOWER(dept.name) = LOWER(:departmentName))
+    LEFT JOIN a.location loc
+    WHERE
+        (:locationName IS NOT NULL AND LOWER(loc.name) = LOWER(:locationName))
+        OR
+        (:departmentName IS NOT NULL AND LOWER(dept.name) = LOWER(:departmentName))
 """)
     Page<Asset> findByAccessScope(
             @Param("locationName") String locationName,
