@@ -16,8 +16,8 @@ public record RegisterRequest(
         @NotBlank(message = "Password is required")
         @Size(min = 8, message = "Password must be at least 8 characters")
         String password,
-        String location,
-        String department,
+        Long locationId,
+        Long departmentId,
         @Pattern(
                 regexp = "^(admin|admin_user|user)?$",
                 message = "Role must be admin, admin_user, or user"

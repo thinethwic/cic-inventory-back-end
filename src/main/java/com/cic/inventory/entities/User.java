@@ -39,11 +39,13 @@ public class User {
     @Column(nullable = false, length = 255)
     private String password;
 
-    @Column(nullable = false, length = 120)
-    private String location;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "location_id", nullable = true)
+    private Location location;
 
-    @Column(nullable = false, length = 120)
-    private String department;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "department_id", nullable = true)
+    private Department department;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 30)

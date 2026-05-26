@@ -1,10 +1,14 @@
 package com.cic.inventory.services.impl;
 
 import com.cic.inventory.dtos.auth.*;
+import com.cic.inventory.entities.Department;
+import com.cic.inventory.entities.Location;
 import com.cic.inventory.entities.User;
 import com.cic.inventory.entities.UserSession;
 import com.cic.inventory.entities.types.UserRole;
 import com.cic.inventory.exceptions.InventoryException;
+import com.cic.inventory.repositories.DepartmentRepositories;
+import com.cic.inventory.repositories.LocationRepositories;
 import com.cic.inventory.repositories.UserRepository;
 import com.cic.inventory.repositories.UserSessionRepository;
 import com.cic.inventory.security.JwtService;
@@ -30,6 +34,8 @@ import java.util.UUID;
 public class AuthServiceImpl implements AuthService {
 
     private final UserRepository userRepository;
+    private final LocationRepositories locationRepositories;
+    private final DepartmentRepositories departmentRepositories;
     private final UserSessionRepository userSessionRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
@@ -61,15 +67,37 @@ public class AuthServiceImpl implements AuthService {
         }
 
         UserRole requestedRole = UserRole.fromValue(request.role());
-        validateScopeFields(requestedRole, request.location(), request.department());
+
+        // ✅ Look up real entities
+        Location location = null;
+        Department department = null;
+
+        if (requestedRole != UserRole.ADMIN) {
+            if (request.locationId() == null && request.departmentId() == null) {
+                throw new InventoryException(
+                        "Location or department is required for non-admin users",
+                        HttpStatus.BAD_REQUEST
+                );
+            }
+
+            if (request.locationId() != null) {
+                location = locationRepositories.findById(request.locationId())
+                        .orElseThrow(() -> new InventoryException("Location not found", HttpStatus.NOT_FOUND));
+            }
+
+            if (request.departmentId() != null) {
+                department = departmentRepositories.findById(request.departmentId())
+                        .orElseThrow(() -> new InventoryException("Department not found", HttpStatus.NOT_FOUND));
+            }
+        }
 
         User user = User.builder()
                 .firstName(request.firstName().trim())
                 .lastName(request.lastName().trim())
                 .email(request.email().trim().toLowerCase())
                 .password(passwordEncoder.encode(request.password()))
-                .location(normalizeScopeValue(request.location()))
-                .department(normalizeScopeValue(request.department()))
+                .location(location)       // ✅ entity, not string
+                .department(department)   // ✅ entity, not string
                 .role(requestedRole)
                 .isActive(true)
                 .build();
@@ -158,8 +186,8 @@ public class AuthServiceImpl implements AuthService {
                 .lastName(user.getLastName())
                 .fullName((user.getFirstName() + " " + user.getLastName()).trim())
                 .email(user.getEmail())
-                .location(user.getLocation())
-                .department(user.getDepartment())
+                .location(user.getLocation() != null ? user.getLocation().getName() : null)
+                .department(user.getDepartment() != null ? user.getDepartment().getName() : null)
                 .role(role)
                 .roles(List.of(role))
                 .isActive(user.isActive())

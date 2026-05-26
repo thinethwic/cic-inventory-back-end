@@ -3,9 +3,13 @@ package com.cic.inventory.services.impl;
 import com.cic.inventory.dtos.auth.AuthUserResponse;
 import com.cic.inventory.dtos.users.UserCreateRequest;
 import com.cic.inventory.dtos.users.UserUpdateRequest;
+import com.cic.inventory.entities.Department;
+import com.cic.inventory.entities.Location;
 import com.cic.inventory.entities.User;
 import com.cic.inventory.entities.types.UserRole;
 import com.cic.inventory.exceptions.InventoryException;
+import com.cic.inventory.repositories.DepartmentRepositories;
+import com.cic.inventory.repositories.LocationRepositories;
 import com.cic.inventory.repositories.UserRepository;
 import com.cic.inventory.security.UserPrincipal;
 import com.cic.inventory.services.UserManagementService;
@@ -21,6 +25,8 @@ import org.springframework.stereotype.Service;
 public class UserManagementServiceImpl implements UserManagementService {
 
     private final UserRepository userRepository;
+    private final LocationRepositories locationRepositories;
+    private final DepartmentRepositories departmentRepositories;
     private final PasswordEncoder passwordEncoder;
     private final AuthServiceImpl authService;
 
@@ -44,15 +50,34 @@ public class UserManagementServiceImpl implements UserManagementService {
         }
 
         UserRole targetRole = UserRole.fromValue(request.role());
-        validateScopeFields(targetRole, request.location(), request.department());
+
+        Location location = null;
+        Department department = null;
+
+        if (targetRole != UserRole.ADMIN) {
+            if (request.locationId() == null && request.departmentId() == null) {
+                throw new InventoryException(
+                        "Location or department is required for non-admin users",
+                        HttpStatus.BAD_REQUEST
+                );
+            }
+            if (request.locationId() != null) {
+                location = locationRepositories.findById(request.locationId())
+                        .orElseThrow(() -> new InventoryException("Location not found", HttpStatus.NOT_FOUND));
+            }
+            if (request.departmentId() != null) {
+                department = departmentRepositories.findById(request.departmentId())
+                        .orElseThrow(() -> new InventoryException("Department not found", HttpStatus.NOT_FOUND));
+            }
+        }
 
         User user = User.builder()
                 .firstName(request.firstName().trim())
                 .lastName(request.lastName().trim())
                 .email(request.email().trim().toLowerCase())
                 .password(passwordEncoder.encode(request.password()))
-                .location(normalizeScopeValue(request.location()))
-                .department(normalizeScopeValue(request.department()))
+                .location(location)
+                .department(department)
                 .role(targetRole)
                 .isActive(request.isActive() == null || request.isActive())
                 .build();
@@ -73,41 +98,48 @@ public class UserManagementServiceImpl implements UserManagementService {
             throw new InventoryException("A user with this email already exists", HttpStatus.CONFLICT);
         }
 
-        if (request.firstName() != null && !request.firstName().isBlank()) {
+        if (request.firstName() != null && !request.firstName().isBlank())
             existingUser.setFirstName(request.firstName().trim());
-        }
-        if (request.lastName() != null && !request.lastName().isBlank()) {
+        if (request.lastName() != null && !request.lastName().isBlank())
             existingUser.setLastName(request.lastName().trim());
-        }
-        if (request.email() != null && !request.email().isBlank()) {
+        if (request.email() != null && !request.email().isBlank())
             existingUser.setEmail(request.email().trim().toLowerCase());
-        }
-        if (request.location() != null && !request.location().isBlank()) {
-            existingUser.setLocation(request.location().trim());
-        }
-        if (request.department() != null && !request.department().isBlank()) {
-            existingUser.setDepartment(request.department().trim());
-        } else if (request.department() != null) {
-            existingUser.setDepartment("");
-        }
-        if (request.role() != null && !request.role().isBlank()) {
+        if (request.role() != null && !request.role().isBlank())
             existingUser.setRole(targetRole);
-        }
-        if (request.isActive() != null) {
+        if (request.isActive() != null)
             existingUser.setActive(request.isActive());
-        }
-        if (request.password() != null && !request.password().isBlank()) {
+        if (request.password() != null && !request.password().isBlank())
             existingUser.setPassword(passwordEncoder.encode(request.password()));
+
+        // ✅ Look up location entity by ID
+        if (request.locationId() != null) {
+            Location location = locationRepositories.findById(request.locationId())
+                    .orElseThrow(() -> new InventoryException("Location not found", HttpStatus.NOT_FOUND));
+            existingUser.setLocation(location);
         }
 
-        if (request.location() != null && request.location().isBlank()) {
-            existingUser.setLocation("");
+        // ✅ Look up department entity by ID
+        if (request.departmentId() != null) {
+            Department department = departmentRepositories.findById(request.departmentId())
+                    .orElseThrow(() -> new InventoryException("Department not found", HttpStatus.NOT_FOUND));
+            existingUser.setDepartment(department);
+        } else if (request.departmentId() == null && targetRole == UserRole.ADMIN) {
+            existingUser.setDepartment(null);
         }
 
-        validateScopeFields(existingUser.getRole(), existingUser.getLocation(), existingUser.getDepartment());
+        // Validate non-admin still has at least one scope
+        if (existingUser.getRole() != UserRole.ADMIN) {
+            if (existingUser.getLocation() == null && existingUser.getDepartment() == null) {
+                throw new InventoryException(
+                        "Location or department is required for non-admin users",
+                        HttpStatus.BAD_REQUEST
+                );
+            }
+        }
 
         return authService.toUserResponse(userRepository.save(existingUser));
     }
+
 
     @Override
     public void deleteUser(Long id, UserPrincipal principal) {

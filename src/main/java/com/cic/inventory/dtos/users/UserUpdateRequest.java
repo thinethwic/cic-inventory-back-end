@@ -11,8 +11,8 @@ public record UserUpdateRequest(
         String email,
         @Size(min = 8, message = "Password must be at least 8 characters")
         String password,
-        String location,
-        String department,
+        Long locationId,      // ✅ was: String location
+        Long departmentId,
         @Pattern(regexp = "^(admin|admin_user|user)?$", message = "Invalid role")
         String role,
         Boolean isActive
