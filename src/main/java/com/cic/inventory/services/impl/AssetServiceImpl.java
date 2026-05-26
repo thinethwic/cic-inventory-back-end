@@ -105,7 +105,7 @@ public class AssetServiceImpl implements AssetService {
     }
 
     @Override
-    @Cacheable(value = "assets", key = "'scope_' + #departmentName + '_' + #pageable.pageNumber + '_' + #pageable.pageSize")
+    @Cacheable(value = "assets", key = "'scope_' + #locationName + '_' + #departmentName + '_' + #pageable.pageNumber + '_' + #pageable.pageSize")
     public Page<AssetResponseDTO> getAssetsByAccessScope(
             String locationName,
             String departmentName,
