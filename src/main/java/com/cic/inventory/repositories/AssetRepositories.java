@@ -33,9 +33,13 @@ public interface AssetRepositories extends JpaRepository<Asset, Long> {
     SELECT DISTINCT a FROM Asset a
     LEFT JOIN a.assignedTo emp
     LEFT JOIN emp.department dept
-    WHERE LOWER(dept.name) = LOWER(:departmentName)
+    LEFT JOIN a.location loc
+    WHERE
+        LOWER(loc.name) = LOWER(:locationName)
+        AND (:departmentName IS NULL OR LOWER(dept.name) = LOWER(:departmentName))
 """)
     Page<Asset> findByAccessScope(
+            @Param("locationName") String locationName,
             @Param("departmentName") String departmentName,
             Pageable pageable
     );

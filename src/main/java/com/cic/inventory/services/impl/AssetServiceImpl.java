@@ -104,6 +104,7 @@ public class AssetServiceImpl implements AssetService {
         }
     }
 
+    @Override
     @Cacheable(value = "assets", key = "'scope_' + #departmentName + '_' + #pageable.pageNumber + '_' + #pageable.pageSize")
     public Page<AssetResponseDTO> getAssetsByAccessScope(
             String locationName,
@@ -111,13 +112,14 @@ public class AssetServiceImpl implements AssetService {
             Pageable pageable
     ) {
         try {
-            boolean hasDepartment = departmentName != null && !departmentName.isBlank();
-
-            if (!hasDepartment) {
+            // Location is mandatory — without it return empty
+            if (locationName == null || locationName.isBlank()) {
                 return Page.empty(pageable);
             }
 
-            return assetRepositories.findByAccessScope(departmentName, pageable)
+            String dept = (departmentName == null || departmentName.isBlank()) ? null : departmentName;
+
+            return assetRepositories.findByAccessScope(locationName, dept, pageable)
                     .map(this::toResponse);
 
         } catch (InventoryException exception) {

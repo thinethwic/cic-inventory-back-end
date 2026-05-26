@@ -54,6 +54,7 @@ public class UserManagementServiceImpl implements UserManagementService {
         Location location = null;
         Department department = null;
 
+        
         if (targetRole != UserRole.ADMIN) {
             if (request.locationId() == null && request.departmentId() == null) {
                 throw new InventoryException(
