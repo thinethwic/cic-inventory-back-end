@@ -67,7 +67,7 @@ public class AssetServiceImpl implements AssetService {
     }
 
     @Override
-    @Cacheable(value = "assets", key = "#pageable.pageNumber + '_' + #pageable.pageSize")
+    @Cacheable(value = "assets", key = "'all_' + #pageable.pageNumber + '_' + #pageable.pageSize")
     public Page<AssetResponseDTO> getAllAsset(Pageable pageable) {
         try {
             return assetRepositories.findAll(pageable).map(this::toResponse);
@@ -104,25 +104,21 @@ public class AssetServiceImpl implements AssetService {
         }
     }
 
-    @Override
+    @Cacheable(value = "assets", key = "'scope_' + #departmentName + '_' + #pageable.pageNumber + '_' + #pageable.pageSize")
     public Page<AssetResponseDTO> getAssetsByAccessScope(
             String locationName,
             String departmentName,
             Pageable pageable
     ) {
         try {
-            boolean hasLocation = locationName != null && !locationName.isBlank();
             boolean hasDepartment = departmentName != null && !departmentName.isBlank();
 
-            if (!hasLocation && !hasDepartment) {
+            if (!hasDepartment) {
                 return Page.empty(pageable);
             }
 
-            return assetRepositories.findByAccessScope(
-                    hasLocation ? locationName : null,
-                    hasDepartment ? departmentName : null,
-                    pageable
-            ).map(this::toResponse);
+            return assetRepositories.findByAccessScope(departmentName, pageable)
+                    .map(this::toResponse);
 
         } catch (InventoryException exception) {
             throw exception;
