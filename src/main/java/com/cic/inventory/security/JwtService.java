@@ -62,7 +62,7 @@ public class JwtService implements TokenValidator {
                 .claim("firstName", user.getFirstName())
                 .claim("lastName", user.getLastName())
                 .claim("location", user.getLocation())
-                .claim("department", user.getDepartment())
+                .claim("department", user.getDepartment().getName())
                 .claim("role", user.getRole().toClaimValue())
                 .claim("roles", List.of(user.getRole().toClaimValue()))
                 .signWith(getSigningKey())
