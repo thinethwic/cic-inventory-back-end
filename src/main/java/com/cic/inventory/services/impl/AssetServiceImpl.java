@@ -114,25 +114,16 @@ public class AssetServiceImpl implements AssetService {
             boolean hasLocation = locationName != null && !locationName.isBlank();
             boolean hasDepartment = departmentName != null && !departmentName.isBlank();
 
-            if (hasLocation && hasDepartment) {
-                return assetRepositories
-                        .findByLocation_NameIgnoreCaseAndAssignedTo_Department_NameIgnoreCase(
-                                locationName,
-                                departmentName,
-                                pageable
-                        )
-                        .map(this::toResponse);
+            if (!hasLocation && !hasDepartment) {
+                return Page.empty(pageable);
             }
 
-            if (hasDepartment) {
-                return getAssetsByDepartment(departmentName, pageable);
-            }
+            return assetRepositories.findByAccessScope(
+                    hasLocation ? locationName : null,
+                    hasDepartment ? departmentName : null,
+                    pageable
+            ).map(this::toResponse);
 
-            if (hasLocation) {
-                return getAssetsByLocation(locationName, pageable);
-            }
-
-            return Page.empty(pageable);
         } catch (InventoryException exception) {
             throw exception;
         } catch (Exception exception) {
