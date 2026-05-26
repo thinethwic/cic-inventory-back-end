@@ -29,7 +29,6 @@ public interface AssetRepositories extends JpaRepository<Asset, Long> {
             Pageable pageable
     );
 
-    // Replace the combined query with a LEFT JOIN version
     @Query("""
     SELECT DISTINCT a FROM Asset a
     LEFT JOIN a.assignedTo emp
