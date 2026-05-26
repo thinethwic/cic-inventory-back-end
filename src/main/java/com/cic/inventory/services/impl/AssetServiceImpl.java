@@ -112,15 +112,23 @@ public class AssetServiceImpl implements AssetService {
             Pageable pageable
     ) {
         try {
-            // Location is mandatory — without it return empty
             if (locationName == null || locationName.isBlank()) {
                 return Page.empty(pageable);
             }
 
-            String dept = (departmentName == null || departmentName.isBlank()) ? null : departmentName;
+            boolean hasDepartment = departmentName != null && !departmentName.isBlank();
 
-            return assetRepositories.findByAccessScope(locationName, dept, pageable)
-                    .map(this::toResponse);
+            // ✅ Call different queries — never pass null to JPQL
+            if (hasDepartment) {
+                return assetRepositories
+                        .findByLocation_NameIgnoreCaseAndAssignedTo_Department_NameIgnoreCase(
+                                locationName, departmentName, pageable)
+                        .map(this::toResponse);
+            } else {
+                return assetRepositories
+                        .findByLocation_NameIgnoreCase(locationName, pageable)
+                        .map(this::toResponse);
+            }
 
         } catch (InventoryException exception) {
             throw exception;

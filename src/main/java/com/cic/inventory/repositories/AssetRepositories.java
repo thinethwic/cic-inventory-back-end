@@ -37,7 +37,7 @@ public interface AssetRepositories extends JpaRepository<Asset, Long> {
     WHERE LOWER(loc.name) = LOWER(:locationName)
     AND (
         :departmentName IS NULL
-        OR dept IS NOT NULL AND LOWER(dept.name) = LOWER(:departmentName)
+        OR LOWER(dept.name) = LOWER(:departmentName)
     )
 """)
     Page<Asset> findByAccessScope(
