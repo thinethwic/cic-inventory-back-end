@@ -63,13 +63,14 @@ public class Maintenance {
     @Column
     private String location;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "created_by", updatable = false)
     private User createdBy;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "updated_by")
     private User updatedBy;
+
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
