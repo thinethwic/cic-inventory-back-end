@@ -1,7 +1,9 @@
 package com.cic.inventory.controllers.v1;
 
+import com.cic.inventory.configs.MaintenanceMapper;
 import com.cic.inventory.controllers.AbstractController;
 import com.cic.inventory.dtos.MaintenanceDTO;
+import com.cic.inventory.dtos.MaintenanceResponse;
 import com.cic.inventory.entities.Maintenance;
 import com.cic.inventory.security.UserPrincipal;
 import com.cic.inventory.services.MaintenanceService;
@@ -75,23 +77,27 @@ public class MaintenanceController extends AbstractController {
     }
 
     @GetMapping("{id}")
-    public ResponseEntity<Maintenance> getMaintenanceById(@PathVariable Long id) {
-        return sendOkResponse(maintenanceService.getMaintenanceById(id));
+    public ResponseEntity<MaintenanceResponse> getMaintenanceById(@PathVariable Long id) {
+        return sendOkResponse(
+                MaintenanceMapper.toResponse(maintenanceService.getMaintenanceById(id))
+        );
     }
 
     @PostMapping
-    public ResponseEntity<Maintenance> createMaintenance(
+    public ResponseEntity<MaintenanceResponse> createMaintenance(
             @Validated @RequestBody MaintenanceDTO maintenanceDTO,
             Authentication authentication) {
 
         UserPrincipal principal = (UserPrincipal) authentication.getPrincipal();
         maintenanceDTO.setCurrentUserId(Long.parseLong(principal.getId()));
 
-        return sendCreatedResponse(maintenanceService.createNewMaintenance(maintenanceDTO));
+        return sendCreatedResponse(
+                MaintenanceMapper.toResponse(maintenanceService.createNewMaintenance(maintenanceDTO))
+        );
     }
 
     @PutMapping("{id}")
-    public ResponseEntity<Maintenance> updateMaintenance(
+    public ResponseEntity<MaintenanceResponse> updateMaintenance(
             @PathVariable Long id,
             @Valid @RequestBody MaintenanceDTO maintenanceDTO,
             Authentication authentication) {
@@ -99,7 +105,9 @@ public class MaintenanceController extends AbstractController {
         UserPrincipal principal = (UserPrincipal) authentication.getPrincipal();
         maintenanceDTO.setCurrentUserId(Long.parseLong(principal.getId()));
 
-        return sendOkResponse(maintenanceService.updateMaintenanceById(id, maintenanceDTO));
+        return sendOkResponse(
+                MaintenanceMapper.toResponse(maintenanceService.updateMaintenanceById(id, maintenanceDTO))
+        );
     }
 
     @DeleteMapping("{id}")

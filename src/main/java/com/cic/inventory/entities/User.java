@@ -1,6 +1,7 @@
 package com.cic.inventory.entities;
 
 import com.cic.inventory.entities.types.UserRole;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -22,6 +23,13 @@ import java.time.Instant;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@JsonIgnoreProperties({
+        "password",
+        "location",
+        "department",
+        "hibernateLazyInitializer",
+        "handler"
+})
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
