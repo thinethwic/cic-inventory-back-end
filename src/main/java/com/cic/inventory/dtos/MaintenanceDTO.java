@@ -2,7 +2,6 @@ package com.cic.inventory.dtos;
 
 import com.cic.inventory.entities.types.MaintenancePriority;
 import com.cic.inventory.entities.types.MaintenanceStatus;
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -16,6 +15,7 @@ import java.time.LocalDate;
 @AllArgsConstructor
 public class MaintenanceDTO {
 
+    // ── Request fields (sent by frontend) ─────────────────────────────────────
     private String ticketNo;
 
     @NotNull(message = "Asset is required")
@@ -36,8 +36,9 @@ public class MaintenanceDTO {
     private LocalDate dueDate;
     private String assignedTo;
     private BigDecimal cost;
-
     private String location;
-
     private String notes;
+
+    // ── Injected by controller (never from request body) ──────────────────────
+    private Long currentUserId;
 }

@@ -33,10 +33,7 @@ public class MaintenanceController extends AbstractController {
             @RequestParam(required = false) String location) {
 
         UserPrincipal principal = (UserPrincipal) authentication.getPrincipal();
-
-        boolean isAdmin = authentication.getAuthorities().stream()
-                .anyMatch(a -> a.getAuthority().equalsIgnoreCase("ROLE_Admin") ||
-                        a.getAuthority().equalsIgnoreCase("ROLE_admin_user"));
+        boolean isAdmin = isAdmin(authentication);
 
         if (isAdmin) {
             return sendOkResponse(
@@ -45,7 +42,6 @@ public class MaintenanceController extends AbstractController {
             );
         }
 
-        // Non-admin: always force their own location
         String userLocation = principal.getLocation() != null
                 ? principal.getLocation().trim()
                 : "";
@@ -63,17 +59,14 @@ public class MaintenanceController extends AbstractController {
     @GetMapping("/locations")
     public ResponseEntity<List<String>> getMaintenanceLocations(Authentication authentication) {
         UserPrincipal principal = (UserPrincipal) authentication.getPrincipal();
-
-        boolean isAdmin = authentication.getAuthorities().stream()
-                .anyMatch(a -> a.getAuthority().equalsIgnoreCase("ROLE_Admin") ||
-                        a.getAuthority().equalsIgnoreCase("ROLE_admin_user"));
+        boolean isAdmin = isAdmin(authentication);
 
         List<String> locations = maintenanceService.getAllMaintenance(Pageable.unpaged())
                 .stream()
                 .map(Maintenance::getLocation)
-                .filter(location -> location != null && !location.isBlank())
+                .filter(loc -> loc != null && !loc.isBlank())
                 .map(String::trim)
-                .filter(location -> isAdmin || location.equalsIgnoreCase(principal.getLocation()))
+                .filter(loc -> isAdmin || loc.equalsIgnoreCase(principal.getLocation()))
                 .distinct()
                 .sorted(String.CASE_INSENSITIVE_ORDER)
                 .toList();
@@ -88,14 +81,24 @@ public class MaintenanceController extends AbstractController {
 
     @PostMapping
     public ResponseEntity<Maintenance> createMaintenance(
-            @Validated @RequestBody MaintenanceDTO maintenanceDTO) {
+            @Validated @RequestBody MaintenanceDTO maintenanceDTO,
+            Authentication authentication) {
+
+        UserPrincipal principal = (UserPrincipal) authentication.getPrincipal();
+        maintenanceDTO.setCurrentUserId(Long.parseLong(principal.getId()));
+
         return sendCreatedResponse(maintenanceService.createNewMaintenance(maintenanceDTO));
     }
 
     @PutMapping("{id}")
     public ResponseEntity<Maintenance> updateMaintenance(
             @PathVariable Long id,
-            @Valid @RequestBody MaintenanceDTO maintenanceDTO) {
+            @Valid @RequestBody MaintenanceDTO maintenanceDTO,
+            Authentication authentication) {
+
+        UserPrincipal principal = (UserPrincipal) authentication.getPrincipal();
+        maintenanceDTO.setCurrentUserId(Long.parseLong(principal.getId()));
+
         return sendOkResponse(maintenanceService.updateMaintenanceById(id, maintenanceDTO));
     }
 
@@ -103,5 +106,11 @@ public class MaintenanceController extends AbstractController {
     public ResponseEntity<Void> deleteMaintenance(@PathVariable Long id) {
         maintenanceService.deleteMaintenance(id);
         return sendNoContentResponse();
+    }
+
+    private boolean isAdmin(Authentication authentication) {
+        return authentication.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equalsIgnoreCase("ROLE_Admin") ||
+                        a.getAuthority().equalsIgnoreCase("ROLE_admin_user"));
     }
 }
