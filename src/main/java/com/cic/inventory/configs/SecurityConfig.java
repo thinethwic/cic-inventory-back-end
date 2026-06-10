@@ -43,12 +43,13 @@ public class SecurityConfig {
                 )
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+
+                        // Public endpoints
                         .requestMatchers(
                                 "/api/public/**",
                                 "/api/auth/login",
                                 "/api/auth/refresh",
                                 "/api/auth/logout",
-                                "/api/users",
                                 "/error",
                                 "/favicon.ico",
                                 "/v3/api-docs/**",
@@ -58,10 +59,17 @@ public class SecurityConfig {
                                 "/webjars/**",
                                 "/swagger-resources/**"
                         ).permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/users").permitAll()  // ✅ only allow public registration
+
+                        // Allow public user registration (POST /api/users only)
+                        .requestMatchers(HttpMethod.POST, "/api/users").permitAll()
+
+                        // Admin-only: register via auth route
                         .requestMatchers("/api/auth/register").hasAuthority("ROLE_admin")
+
+                        // Admin-only: all other /api/users/** operations
+                        .requestMatchers(HttpMethod.GET, "/api/users").hasAuthority("ROLE_admin")
                         .requestMatchers("/api/users/**").hasAuthority("ROLE_admin")
-                        .requestMatchers("/api/users").hasAuthority("ROLE_admin")    // ✅ lock down other methods
+
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(authenticationFilter, UsernamePasswordAuthenticationFilter.class)
