@@ -74,7 +74,7 @@ public class UserManagementServiceImpl implements UserManagementService {
         }
 
         User user = User.builder()
-                .firstName(request.firstName().trim())
+                .firstName(request.firtName().trim())
                 .lastName(request.lastName().trim())
                 .email(request.email().trim().toLowerCase())
                 .password(passwordEncoder.encode(request.password()))
