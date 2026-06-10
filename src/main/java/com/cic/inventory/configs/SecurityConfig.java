@@ -58,8 +58,10 @@ public class SecurityConfig {
                                 "/webjars/**",
                                 "/swagger-resources/**"
                         ).permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/users").permitAll()  // ✅ only allow public registration
                         .requestMatchers("/api/auth/register").hasAuthority("ROLE_admin")
                         .requestMatchers("/api/users/**").hasAuthority("ROLE_admin")
+                        .requestMatchers("/api/users").hasAuthority("ROLE_admin")    // ✅ lock down other methods
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(authenticationFilter, UsernamePasswordAuthenticationFilter.class)
