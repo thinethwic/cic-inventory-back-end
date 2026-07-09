@@ -1,15 +1,20 @@
 package com.cic.inventory.entities;
 
 import com.cic.inventory.entities.types.AssetStatus;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 @Entity
 @AllArgsConstructor
@@ -74,4 +79,15 @@ public class Asset {
     @UpdateTimestamp
     @Column(name = "updated_at")
     private Date updatedAt;
+
+    // Excluded from equals/hashCode/toString (Lombok @Data would otherwise
+    // touch this lazy collection outside a transaction) and from JSON
+    // (attachments are only ever exposed through the dedicated
+    // /assets/{id}/attachments endpoints, as AssetAttachmentDTO — never the
+    // raw entity, which would leak the on-disk file path).
+    @OneToMany(mappedBy = "asset", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
+    @JsonIgnore
+    private List<AssetAttachment> attachments = new ArrayList<>();
 }
