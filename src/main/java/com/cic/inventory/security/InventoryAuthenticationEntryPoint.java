@@ -1,10 +1,12 @@
 package com.cic.inventory.security;
 
+import com.cic.inventory.dtos.ErrorResponse;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.AuthenticationEntryPoint;
@@ -12,8 +14,8 @@ import org.springframework.stereotype.Component;
 import tools.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 @RequiredArgsConstructor
 @Component
@@ -36,11 +38,12 @@ public class InventoryAuthenticationEntryPoint implements AuthenticationEntryPoi
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
 
-        Map<String, Object> body = new HashMap<>();
-        body.put("status", HttpServletResponse.SC_UNAUTHORIZED);
-        body.put("error", "Unauthorized or Token has expired");
-        body.put("path", request.getRequestURI());
+        ErrorResponse errorResponse = ErrorResponse.builder()
+                .message("Unauthorized or token has expired")
+                .errorCode(HttpStatus.UNAUTHORIZED.toString())
+                .timestamp(LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME))
+                .build();
 
-        response.getWriter().write(objectMapper.writeValueAsString(body));
+        response.getWriter().write(objectMapper.writeValueAsString(errorResponse));
     }
 }

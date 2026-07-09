@@ -52,4 +52,23 @@ public class AuthController extends AbstractController {
         UserPrincipal principal = (UserPrincipal) authentication.getPrincipal();
         return sendOkResponse(authService.getCurrentUser(principal));
     }
+
+    @PutMapping("/me")
+    public ResponseEntity<AuthUserResponse> updateProfile(
+            @Valid @RequestBody UpdateProfileRequest request,
+            Authentication authentication
+    ) {
+        UserPrincipal principal = (UserPrincipal) authentication.getPrincipal();
+        return sendOkResponse(authService.updateProfile(principal, request));
+    }
+
+    @PutMapping("/change-password")
+    public ResponseEntity<Void> changePassword(
+            @Valid @RequestBody ChangePasswordRequest request,
+            Authentication authentication
+    ) {
+        UserPrincipal principal = (UserPrincipal) authentication.getPrincipal();
+        authService.changePassword(principal, request);
+        return sendNoContentResponse();
+    }
 }

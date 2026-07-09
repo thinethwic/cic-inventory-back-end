@@ -9,4 +9,6 @@ public interface AuthService {
     AuthResponse refresh(RefreshTokenRequest request);
     void logout(String accessToken, LogoutRequest request);
     AuthUserResponse getCurrentUser(UserPrincipal principal);
+    AuthUserResponse updateProfile(UserPrincipal principal, UpdateProfileRequest request);
+    void changePassword(UserPrincipal principal, ChangePasswordRequest request);
 }

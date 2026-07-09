@@ -178,6 +178,32 @@ public class AuthServiceImpl implements AuthService {
         return toUserResponse(user);
     }
 
+    @Override
+    public AuthUserResponse updateProfile(UserPrincipal principal, UpdateProfileRequest request) {
+        Long userId = parseUserId(principal.getId());
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new InventoryException("User not found", HttpStatus.NOT_FOUND));
+
+        user.setFirstName(request.firstName().trim());
+        user.setLastName(request.lastName().trim());
+
+        return toUserResponse(userRepository.save(user));
+    }
+
+    @Override
+    public void changePassword(UserPrincipal principal, ChangePasswordRequest request) {
+        Long userId = parseUserId(principal.getId());
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new InventoryException("User not found", HttpStatus.NOT_FOUND));
+
+        if (!passwordEncoder.matches(request.currentPassword(), user.getPassword())) {
+            throw new InventoryException("Current password is incorrect", HttpStatus.BAD_REQUEST);
+        }
+
+        user.setPassword(passwordEncoder.encode(request.newPassword()));
+        userRepository.save(user);
+    }
+
     public AuthUserResponse toUserResponse(User user) {
         String role = user.getRole().toClaimValue();
         return AuthUserResponse.builder()

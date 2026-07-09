@@ -9,8 +9,12 @@ services:
       - USERNAME=${DB_USERNAME:-postgres}
       - PASSWORD=${DB_PASSWORD:-123Thineth//}
       - SPRING_PROFILES_ACTIVE=prod
+      - FILE_UPLOAD_DIR=/uploads
+    volumes:
+      - uploads_data:/uploads
     depends_on:
       - db
 
 volumes:
   postgres_data:
+  uploads_data:
