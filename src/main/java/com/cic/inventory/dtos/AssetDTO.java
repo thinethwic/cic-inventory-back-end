@@ -49,10 +49,8 @@ public class AssetDTO {
     @NotNull(message = "Supplier is required")
     private Long supplierId;
 
-    @NotNull(message = "Purchase date is required")
     private LocalDate purchaseDate;
 
-    @NotNull(message = "Warranty end date is required")
     private LocalDate warrantyEnd;
 
     private String qrCode; // better as string if using QR values

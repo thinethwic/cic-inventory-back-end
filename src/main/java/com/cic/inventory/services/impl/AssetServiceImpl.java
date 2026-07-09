@@ -1,13 +1,17 @@
 package com.cic.inventory.services.impl;
 
 import com.cic.inventory.dtos.AssetDTO;
+import com.cic.inventory.dtos.responses.AssetBreakdownDTO;
 import com.cic.inventory.dtos.responses.AssetResponseDTO;
+import com.cic.inventory.dtos.responses.DashboardStatsDTO;
+import com.cic.inventory.dtos.responses.WarrantyExpiringDTO;
 import com.cic.inventory.entities.*;
 import com.cic.inventory.exceptions.InventoryException;
 import com.cic.inventory.repositories.AssetRepositories;
 import com.cic.inventory.repositories.EmployeeRepositories;
 import com.cic.inventory.repositories.LocationRepositories;
 import com.cic.inventory.repositories.SupplierRepositories;
+import com.cic.inventory.repositories.specifications.AssetSpecifications;
 import com.cic.inventory.services.AssetService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -17,9 +21,17 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.InvalidDataAccessResourceUsageException;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+
+import java.time.LocalDate;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 
 @Service
 @Slf4j
@@ -67,10 +79,18 @@ public class AssetServiceImpl implements AssetService {
     }
 
     @Override
-    @Cacheable(value = "assets", key = "'all_' + #pageable.pageNumber + '_' + #pageable.pageSize")
-    public Page<AssetResponseDTO> getAllAsset(Pageable pageable) {
+    @Cacheable(value = "assets", key = "'all_' + #pageable.pageNumber + '_' + #pageable.pageSize + '_' + #search + '_' + #status + '_' + #category + '_' + #location + '_' + #supplier")
+    public Page<AssetResponseDTO> getAllAsset(
+            Pageable pageable,
+            String search,
+            String status,
+            String category,
+            String location,
+            String supplier
+    ) {
         try {
-            return assetRepositories.findAll(pageable).map(this::toResponse);
+            Specification<Asset> spec = AssetSpecifications.build(location, null, search, status, category, supplier);
+            return assetRepositories.findAll(spec, pageable).map(this::toResponse);
         } catch (InvalidDataAccessResourceUsageException e) {
             log.error("Database schema mismatch while fetching assets: {}", e.getMostSpecificCause().getMessage());
             throw new InventoryException("Service unavailable due to a configuration issue. Please contact support.", HttpStatus.INTERNAL_SERVER_ERROR);
@@ -105,30 +125,23 @@ public class AssetServiceImpl implements AssetService {
     }
 
     @Override
-    @Cacheable(value = "assets", key = "'scope_' + #locationName + '_' + #departmentName + '_' + #pageable.pageNumber + '_' + #pageable.pageSize")
+    @Cacheable(value = "assets", key = "'scope_' + #locationName + '_' + #departmentName + '_' + #pageable.pageNumber + '_' + #pageable.pageSize + '_' + #search + '_' + #status + '_' + #category + '_' + #supplier")
     public Page<AssetResponseDTO> getAssetsByAccessScope(
             String locationName,
             String departmentName,
-            Pageable pageable
+            Pageable pageable,
+            String search,
+            String status,
+            String category,
+            String supplier
     ) {
         try {
             if (locationName == null || locationName.isBlank()) {
                 return Page.empty(pageable);
             }
 
-            boolean hasDepartment = departmentName != null && !departmentName.isBlank();
-
-            // ✅ Call different queries — never pass null to JPQL
-            if (hasDepartment) {
-                return assetRepositories
-                        .findByLocation_NameIgnoreCaseAndAssignedTo_Department_NameIgnoreCase(
-                                locationName, departmentName, pageable)
-                        .map(this::toResponse);
-            } else {
-                return assetRepositories
-                        .findByLocation_NameIgnoreCase(locationName, pageable)
-                        .map(this::toResponse);
-            }
+            Specification<Asset> spec = AssetSpecifications.build(locationName, departmentName, search, status, category, supplier);
+            return assetRepositories.findAll(spec, pageable).map(this::toResponse);
 
         } catch (InventoryException exception) {
             throw exception;
@@ -136,6 +149,43 @@ public class AssetServiceImpl implements AssetService {
             log.error("Failed to get assets for access scope", exception);
             throw new InventoryException("Failed to get assets", HttpStatus.INTERNAL_SERVER_ERROR);
         }
+    }
+
+    @Override
+    @Cacheable(value = "assets", key = "'stats_' + #locationName + '_' + #departmentName")
+    public DashboardStatsDTO getDashboardStats(String locationName, String departmentName) {
+        long total = assetRepositories.count(AssetSpecifications.build(locationName, departmentName, null, null, null, null));
+        long assigned = assetRepositories.count(AssetSpecifications.build(locationName, departmentName, null, "ASSIGNED", null, null));
+        long inRepair = assetRepositories.count(AssetSpecifications.build(locationName, departmentName, null, "MAINTENANCE", null, null));
+        long disposed = assetRepositories.count(AssetSpecifications.build(locationName, departmentName, null, "RETIRED", null, null));
+
+        LocalDate today = LocalDate.now();
+        LocalDate cutoff = today.plusDays(60);
+        String lowerLocation = locationName != null && !locationName.isBlank() ? locationName.toLowerCase(Locale.ROOT) : null;
+        String lowerDepartment = departmentName != null && !departmentName.isBlank() ? departmentName.toLowerCase(Locale.ROOT) : null;
+        List<WarrantyExpiringDTO> warrantyExpiring = assetRepositories
+                .findWarrantyExpiring(lowerLocation, lowerDepartment, today, cutoff, PageRequest.of(0, 5))
+                .stream()
+                .map(a -> new WarrantyExpiringDTO(a.getAssetCode(), a.getBrand(), a.getModel(), a.getWarrantyEnd()))
+                .toList();
+
+        return new DashboardStatsDTO(total, assigned, inRepair, disposed, warrantyExpiring);
+    }
+
+    @Override
+    @Cacheable(value = "assets", key = "'breakdown'")
+    public AssetBreakdownDTO getAssetBreakdown() {
+        Map<String, Long> statusCounts = new LinkedHashMap<>();
+        for (Object[] row : assetRepositories.countByStatusGroup()) {
+            statusCounts.put(String.valueOf(row[0]), (Long) row[1]);
+        }
+
+        Map<String, Long> categoryCounts = new LinkedHashMap<>();
+        for (Object[] row : assetRepositories.countByCategoryGroup()) {
+            categoryCounts.put(String.valueOf(row[0]), (Long) row[1]);
+        }
+
+        return new AssetBreakdownDTO(statusCounts, categoryCounts);
     }
 
     @Override
@@ -152,6 +202,7 @@ public class AssetServiceImpl implements AssetService {
     }
 
     @Override
+    @CacheEvict(value = "assets", allEntries = true)
     public Asset updateAssetById(Long id, AssetDTO assetUpdateDTO) {
         try {
             Asset existing = assetRepositories.findById(id)
@@ -188,6 +239,7 @@ public class AssetServiceImpl implements AssetService {
         }
     }
     @Override
+    @CacheEvict(value = "assets", allEntries = true)
     public void deleteAsset(Long id) {
         try {
             assetRepositories.deleteById(id);
