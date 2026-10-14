@@ -18,6 +18,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -39,9 +41,10 @@ public class AssetController extends AbstractController {
     private final AssetAttachmentService assetAttachmentService;
     private final FileStorageService fileStorageService;
 
+
     @GetMapping
-    // ✅ No @PreAuthorize — manual role check inside handles both admin and normal user
     public ResponseEntity<Page<AssetResponseDTO>> getAllAssets(
+            @PageableDefault(sort = {"createdAt", "id"}, direction = Sort.Direction.DESC)
             Pageable pageable,
             Authentication authentication,
             @RequestParam(required = false) String search,
