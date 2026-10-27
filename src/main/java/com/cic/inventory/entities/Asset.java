@@ -27,7 +27,7 @@ public class Asset {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "asset_code", nullable = false, unique = true)
+    @Column(name = "asset_code", nullable = false)
     private String assetCode;
 
     @Column(name = "barcode", unique = true)
