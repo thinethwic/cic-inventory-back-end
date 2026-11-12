@@ -1,12 +1,10 @@
 package com.cic.inventory.dtos;
 
 import com.cic.inventory.entities.types.AssetStatus;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Pattern;
-import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.*;
 import lombok.Data;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @Data
@@ -48,6 +46,10 @@ public class AssetDTO {
 
     @NotNull(message = "Supplier is required")
     private Long supplierId;
+
+    @PositiveOrZero(message = "Asset value must not be negative")
+    @Digits(integer = 13, fraction = 2, message = "Asset value must have at most 13 digits and 2 decimal places")
+    private BigDecimal assetValue; // optional
 
     private LocalDate purchaseDate;
 

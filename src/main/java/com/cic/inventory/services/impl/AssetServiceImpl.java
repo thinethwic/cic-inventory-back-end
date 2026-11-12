@@ -64,6 +64,7 @@ public class AssetServiceImpl implements AssetService {
             asset.setLocation(location);
             asset.setAssignedTo(employee);
             asset.setSupplier(supplier);
+            asset.setAssetValue(assetDTO.getAssetValue());
 
             return assetRepositories.save(asset);
 
@@ -225,6 +226,7 @@ public class AssetServiceImpl implements AssetService {
             existing.setLocation(location);
             existing.setAssignedTo(employee);
             existing.setSupplier(supplier);
+            existing.setAssetValue(assetUpdateDTO.getAssetValue());
 
             return assetRepositories.save(existing);
 
@@ -279,6 +281,7 @@ public class AssetServiceImpl implements AssetService {
         dto.setQrCode(asset.getQrCode());
         dto.setCreatedAt(asset.getCreatedAt());
         dto.setUpdatedAt(asset.getUpdatedAt());
+        dto.setAssetValue(asset.getAssetValue());
 
         // Location — name string + ID
         if (asset.getLocation() != null) {

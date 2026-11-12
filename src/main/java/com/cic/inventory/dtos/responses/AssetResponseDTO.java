@@ -3,6 +3,7 @@ package com.cic.inventory.dtos.responses;
 import com.cic.inventory.entities.types.AssetStatus;
 import lombok.Data;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Date;
 
@@ -29,6 +30,8 @@ public class AssetResponseDTO {
     private LocalDate purchaseDate;
     private LocalDate warrantyEnd;
     private String qrCode;
+
+    private BigDecimal assetValue;
 
     private Date createdAt;
     private Date updatedAt;

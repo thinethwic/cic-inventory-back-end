@@ -11,6 +11,7 @@ import lombok.ToString;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Date;
@@ -90,4 +91,7 @@ public class Asset {
     @EqualsAndHashCode.Exclude
     @JsonIgnore
     private List<AssetAttachment> attachments = new ArrayList<>();
+
+    @Column(name = "asset_value", precision = 15, scale = 2)
+    private BigDecimal assetValue;
 }
